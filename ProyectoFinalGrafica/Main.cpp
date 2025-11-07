@@ -36,6 +36,7 @@ void DoMovement();
 // =================================================================================
 //Configurar funciones para repetir textura de piso
 void ConfigurarTexturaRepetible(GLuint textureID);
+void DibujarPiso(GLuint textureID, glm::vec3 posicion, glm::vec3 escala, GLuint VAO_Cubo, GLint modelLoc);
 
 
 // Propiedades de la ventana
@@ -44,7 +45,7 @@ int SCREEN_WIDTH, SCREEN_HEIGHT;
 
 
 // Configuración de la cámara
-Camera  camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera  camera(glm::vec3(0.0f, 1.0f, 21.0f));
 GLfloat lastX = WIDTH / 2.0;
 GLfloat lastY = HEIGHT / 2.0;
 
@@ -70,27 +71,9 @@ glm::vec3 pointLightPositions[] = {
 // =================================================================================
 
 
-// -----------------------------------------
-//  DESIERTO
-// -----------------------------------------
-
-// -----------------------------------------
-//  CAMELLO (Cuadrante -X, Z)
-// -----------------------------------------
 
 
-// -----------------------------------------
-//  TORTUGA (Cuadrante -X, Z)
-// -----------------------------------------
-
-
-// -----------------------------------------
-//  CÓNDOR (Cuadrante -X, Z)
-// -----------------------------------------
-
-
-
-// Vértices del cubo CON COORDENADAS DE TEXTURA
+// Vértices del cubo
 float vertices[] = {
 	// Posiciones           // Normales           // Coordenadas de Textura (U, V)
 	// Cara Trasera (-Z)
@@ -138,9 +121,7 @@ float vertices[] = {
 };
 
 
-
 glm::vec3 Light1 = glm::vec3(0);
-
 
 // Deltatime
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
@@ -252,20 +233,6 @@ int main()
 	// 						CARGA DE MODELOS - DESIERTO (-X,Z)
 	// =================================================================================
 
-	std::cout << "Cargando modelos..." << std::endl;
-
-	// ====== ESCENARIO ======
-
-
-	// ====== CAMELLO ======
-
-
-	// ====== TORTUGA ======
-
-
-	// ====== CÓNDOR ======
-
-
 
 
 	// =================================================================================
@@ -286,16 +253,24 @@ int main()
 	GLuint pisoTextureID = TextureFromFile("images/ladrillo.png", ".");
 	ConfigurarTexturaRepetible(pisoTextureID);
 
-	// *** TEXTURA PARA EL PISO ACUARIO ***
+	GLuint pisoEntradaID = TextureFromFile("images/pasto.jpg", ".");
+	ConfigurarTexturaRepetible(pisoEntradaID);
 
+	// *** TEXTURA PARA EL PISO ACUARIO ***
+	GLuint pisoAcuarioTextureID = TextureFromFile("images/acuario.jpg", ".");
+	ConfigurarTexturaRepetible(pisoAcuarioTextureID);
 
 	// *** TEXTURA PARA EL PISO SELVA ***
-
+	GLuint pisoSelvaTextureID = TextureFromFile("images/selva.jpg", ".");
+	ConfigurarTexturaRepetible(pisoSelvaTextureID);
 
 	// *** TEXTURA PARA EL PISO SABANA ***
-
+	GLuint pisoSabanaTextureID = TextureFromFile("images/sabana.jpg", ".");
+	ConfigurarTexturaRepetible(pisoSabanaTextureID);
 
 	// *** TEXTURA PARA EL PISO DESIERTO ***
+	GLuint pisoArenaTextureID = TextureFromFile("images/sand.jpg", ".");
+	ConfigurarTexturaRepetible(pisoArenaTextureID);
 
 
 	// =================================================================================
@@ -349,6 +324,32 @@ int main()
 
 	glBindVertexArray(0); // Desvincular el VAO
 
+
+
+	// =================================================================================
+	// 		CONFIGURACIÓN DE VÉRTICES PARA PISO DE ENTRADA
+	// =================================================================================
+	GLuint VBO_Entrada, VAO_Entrada;
+	glGenVertexArrays(1, &VAO_Entrada);
+	glGenBuffers(1, &VBO_Entrada);
+	glBindVertexArray(VAO_Entrada);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_Entrada);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	// Atributo de Posición (Location 0)
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	// Atributo de Normal (Location 1)
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// Atributo de Coordenadas de Textura (Location 2)
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	glBindVertexArray(0); // Desvincular el VAO
 
 
 	// =================================================================================
@@ -514,45 +515,38 @@ int main()
 		// 							DIBUJO DE ESCENARIOS
 		// ---------------------------------------------------------------------------------
 
-		//			 **** DIBUJO DEL PISO GENERAL LADRILLO ****
+		// DIBUJO DEL PISO GENERAL LADRILLO
+			
 		lightingShader.Use();
-		// textura del piso
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, pisoTextureID);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, pisoTextureID);
-		// Enlazar el VAO del cubo
-		glBindVertexArray(VAO_Cubo);
-		// Habilitar los atributos necesarios
-		glEnableVertexAttribArray(0); // Posición
-		glEnableVertexAttribArray(1); // Normal
-		glEnableVertexAttribArray(2); // TexCoords
-		// Crear matriz de transformación para el piso
-		glm::mat4 model_piso = glm::mat4(1.0f);
-		model_piso = glm::translate(model_piso, glm::vec3(0.0f, -0.5f, 0.0f));
-		model_piso = glm::scale(model_piso, glm::vec3(30.0f, 0.1f, 30.0f));
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model_piso));
-		// Dibujar el cubo (piso)
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		DibujarPiso(pisoTextureID, glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(25.0f, 0.1f, 25.0f), VAO_Cubo, modelLoc);
 
-		glBindVertexArray(0);
-
-		// ---------------------------------------------------------------------------------
-		// 							DIBUJO DE ESCENARIO ACUARIO 
-		// ---------------------------------------------------------------------------------
-
-			// **** DIBUJOS DEL PISO Y ACCESORIOS DE ACUARIO ****
+		// DIBUJO DEL PASTO ENTRADA
+		DibujarPiso(pisoEntradaID, glm::vec3(0.0f, -0.5f, 17.6f), glm::vec3(25.0f, 0.1f, 10.0f), VAO_Cubo, modelLoc);
 
 
-
-			// **** DIBUJO DE ANIMALES ACUARIO ****
 
 
 		// ---------------------------------------------------------------------------------
-		// 							DIBUJO DE MODELOS SELVA
+		// 							DIBUJO DE ESCENARIO ACUARIO (x,-z)
+		// ---------------------------------------------------------------------------------
+
+		// **** DIBUJOS DEL PISO Y ACCESORIOS DE ACUARIO ****
+		DibujarPiso(pisoAcuarioTextureID, glm::vec3(7.25f, -0.49f, -7.25f), glm::vec3(10.5f, 0.1f, 10.5f), VAO_Cubo, modelLoc);
+
+
+
+		// **** DIBUJO DE ANIMALES ACUARIO ****
+
+
+
+
+		// ---------------------------------------------------------------------------------
+		// 							DIBUJO DE MODELOS SELVA (x,z)
 		// ---------------------------------------------------------------------------------
 
 		// **** DIBUJO DEL PISO SELVA Y ACCESORIOS SELVA ****
+		DibujarPiso(pisoSelvaTextureID, glm::vec3(7.25f, -0.49f, 7.25f), glm::vec3(10.5f, 0.1f, 10.5f), VAO_Cubo, modelLoc);
+
 
 
 
@@ -561,10 +555,11 @@ int main()
 
 
 		// ---------------------------------------------------------------------------------
-		// 							DIBUJO DE MODELOS SABANA
+		// 							DIBUJO DE MODELOS SABANA (-x,-z)
 		// ---------------------------------------------------------------------------------
 
 		// **** DIBUJO DEL PISO SABANA Y ACCESORIOS SABANA ****
+		DibujarPiso(pisoSabanaTextureID, glm::vec3(-7.25f, -0.49f, -7.25f), glm::vec3(10.5f, 0.1f, 10.5f), VAO_Cubo, modelLoc);
 
 
 
@@ -573,33 +568,18 @@ int main()
 
 
 		// ---------------------------------------------------------------------------------
-		// 							DIBUJO DE MODELOS DESIERTO
+		// 							DIBUJO DE MODELOS DESIERTO (-x,z)
 		// ---------------------------------------------------------------------------------
 
 		// **** DIBUJO DEL PISO DESIERTO  Y COMPONENTES ****
 
-
-		// =================================================================================
-		// 						DIBUJO DE MODELOS - DESIERTO
-		// =================================================================================
+		DibujarPiso(pisoArenaTextureID, glm::vec3(-7.25f, -0.49f, 7.25f), glm::vec3(10.5f, 0.1f, 10.5f), VAO_Cubo, modelLoc);
 
 
-		// --- OASIS ---
 
-		// --- HUESOS ---
-
-		// --- TRONCO ---
-
-		// --- CACTUS ---
 
 		// **** DIBUJO DE ANIMALES DESIERTO ****
 
-
-		//CAMELLO
-
-		// TORTUGA
-
-		// CÓNDOR
 
 
 		lightingShader.Use(); // shader de iluminación 
@@ -628,6 +608,36 @@ void ConfigurarTexturaRepetible(GLuint textureID)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+
+// --- Función para dibujar pisos con textura ---
+void DibujarPiso(GLuint textureID, glm::vec3 posicion, glm::vec3 escala, GLuint VAO_Cubo, GLint modelLoc)
+{
+	// Activar y enlazar la textura
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+
+	// Enlazar el VAO del cubo
+	glBindVertexArray(VAO_Cubo);
+
+	// Habilitar los atributos necesarios
+	glEnableVertexAttribArray(0); // Posición
+	glEnableVertexAttribArray(1); // Normal
+	glEnableVertexAttribArray(2); // TexCoords
+
+	// Crear matriz de transformación para el piso
+	glm::mat4 model_piso = glm::mat4(1.0f);
+	model_piso = glm::translate(model_piso, posicion);
+	model_piso = glm::scale(model_piso, escala);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model_piso));
+
+	// Dibujar el cubo (piso)
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	glBindVertexArray(0);
 }
 
 // Moves/alters the camera positions based on user input
