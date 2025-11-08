@@ -70,6 +70,27 @@ glm::vec3 pointLightPositions[] = {
 // 						ANIMACIÓN Y POSICIONES BASE DE ANIMALES
 // =================================================================================
 
+// -----------------------------------------
+//  DESIERTO
+// -----------------------------------------
+
+// -----------------------------------------
+//  CAMELLO (Cuadrante -X, Z)
+// -----------------------------------------
+float rotCamel = 180.0f;
+float camelLegFL = 0.0f;
+float camelLegFR = 0.0f;
+float camelLegBL = 0.0f;
+float camelLegBR = 0.0f;
+float camelHead = 0.0f;
+float camelTail = 0.0f;
+float camelScale = 0.65f;
+glm::vec3 camelPos = glm::vec3(-6.0f, -0.5f, 10.0f); //-8,13
+
+bool animarCamello = false;
+float startTimeCamello = 0.0f;
+bool teclaC_presionada = false;
+
 
 
 
@@ -232,7 +253,17 @@ int main()
 	// =================================================================================
 	// 						CARGA DE MODELOS - DESIERTO (-X,Z)
 	// =================================================================================
+	std::cout << "Cargando modelos..." << std::endl;
 
+		// ====== CAMELLO ======
+	Model CamelBody((char*)"Models/camello/CamelBody.obj");
+	Model CamelHead((char*)"Models/camello/CamelCabeza.obj");
+	Model CamelLeg_FL((char*)"Models/camello/CamelPataizqEnfr.obj");
+	Model CamelLeg_FR((char*)"Models/camello/CamelPataEnfreDer.obj");
+	Model CamelLeg_BL((char*)"Models/camello/CamelPataizqAtras.obj");
+	Model CamelLeg_BR((char*)"Models/camello/CamelPataAtrasDer.obj");
+
+	std::cout << "Modelos cargados!" << std::endl;
 
 
 	// =================================================================================
@@ -580,6 +611,113 @@ int main()
 
 		// **** DIBUJO DE ANIMALES DESIERTO ****
 
+		//CAMELLO
+
+
+		if (animarCamello)
+		{
+			float t = glfwGetTime() - startTimeCamello;
+
+			// CAMINANDO HACIA EL CACTUS
+			if (t < 8.0f)
+			{
+				// Movimiento de avance 
+				float totalDist = 10.0f - 5.0f; // distancia = 5 unidades
+				camelPos.z = 10.0f - (t * (totalDist / 8.0f)); // avanza desde Z=10 hasta Z=5
+
+				// Movimiento de patas (alternadas)
+				float paso = sin(t * 2.0f); // frecuencia lenta
+				camelLegFL = paso * 15.0f;  // pata frontal izq
+				camelLegBR = paso * 15.0f;  // pata trasera der
+				camelLegFR = -paso * 15.0f; // pata frontal der (opuesta)
+				camelLegBL = -paso * 15.0f; // pata trasera izq (opuesta)
+
+				// Cabeza 
+				camelHead = sin(t * 0.5f) * 1.3f; // leve movimiento
+				rotCamel = 180.0f;
+			}
+
+			// FASE 2: LLEGA AL CACTUS
+			else if (t < 14.0f)
+			{
+				float t2 = t - 8.0f;
+				camelPos.z = 5.0f; // ya está en el cactus (AJUSTADO)
+
+				// Detiene patas lentamente
+				camelLegFL = sin(t2 * 1.0f) * 5.0f;
+				camelLegFR = -camelLegFL;
+				camelLegBL = -camelLegFR;
+				camelLegBR = camelLegFR;
+
+				// Movimiento de cabeza simulando comer
+				camelHead = abs(sin(t2 * 1.5f)) * 2.9f; // baja y sube lento
+				rotCamel = 180.0f;
+			}
+
+			
+			else
+			{
+				camelPos.z = 5.0f;
+				camelHead = 0.0f;
+				camelLegFL = camelLegFR = camelLegBL = camelLegBR = 0.0f;
+				rotCamel = 180.0f;
+			}
+		}
+
+
+		model = glm::mat4(1);
+		model = glm::translate(model, camelPos);
+		model = glm::rotate(model, glm::radians(rotCamel), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(camelScale));
+		modelTemp = model;
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		CamelBody.Draw(lightingShader);
+
+		// Cabeza
+		model = modelTemp;
+		model = glm::rotate(model, glm::radians(camelHead), glm::vec3(1.0f, 0.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		CamelHead.Draw(lightingShader);
+
+		// Pierna delantera izquierda
+		glm::vec3 camelPivotFL(0.3f, 1.2f, 0.5f);
+		model = modelTemp;
+		model = glm::translate(model, camelPivotFL);
+		model = glm::rotate(model, glm::radians(camelLegFL), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -camelPivotFL);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		CamelLeg_FL.Draw(lightingShader);
+
+		// Pierna delantera derecha
+		glm::vec3 camelPivotFR(-0.3f, 1.2f, 0.5f);
+		model = modelTemp;
+		model = glm::translate(model, camelPivotFR);
+		model = glm::rotate(model, glm::radians(camelLegFR), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -camelPivotFR);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		CamelLeg_FR.Draw(lightingShader);
+
+		// Pierna trasera izquierda
+		glm::vec3 camelPivotBL(0.3f, 1.2f, -0.5f);
+		model = modelTemp;
+		model = glm::translate(model, camelPivotBL);
+		model = glm::rotate(model, glm::radians(camelLegBL), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -camelPivotBL);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		CamelLeg_BL.Draw(lightingShader);
+
+		// Pierna trasera derecha
+		glm::vec3 camelPivotBR(-0.3f, 1.2f, -0.5f);
+		model = modelTemp;
+		model = glm::translate(model, camelPivotBR);
+		model = glm::rotate(model, glm::radians(camelLegBR), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -camelPivotBR);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		CamelLeg_BR.Draw(lightingShader);
+
+		//CONDOR
+
+		//TORTUGA
 
 
 		lightingShader.Use(); // shader de iluminación 
@@ -670,6 +808,21 @@ void DoMovement()
 		camera.ProcessKeyboard(RIGHT, deltaTime);
 
 
+	}
+
+	//CAMELLO
+	if (keys[GLFW_KEY_C])
+	{
+		if (!teclaC_presionada)
+		{
+			animarCamello = !animarCamello;
+			startTimeCamello = glfwGetTime();
+			teclaC_presionada = true;
+		}
+	}
+	else
+	{
+		teclaC_presionada = false;
 	}
 
 
