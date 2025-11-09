@@ -1,30 +1,21 @@
 #include <iostream>
 #include <cmath>
-
 // GLEW
 #include <GL/glew.h>
-
 // GLFW
 #include <GLFW/glfw3.h>
-
 // Other Libs
 #include "stb_image.h"
-
 // GLM Mathematics
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
 //Load Models
 #include "SOIL2/SOIL2.h"
-
-
 // Other includes
 #include "Shader.h"
 #include "Camera.h"
 #include "Model.h"
-
-
 // Funciones prototipo para callbacks
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void MouseCallback(GLFWwindow* window, double xPos, double yPos);
@@ -35,20 +26,18 @@ void DoMovement();
 // 	CONFIGURACIÓN INICIAL Y VARIABLES GLOBALES
 // =================================================================================
 //Configurar funciones para repetir textura de piso
+void ConfigurarVAO(GLuint& VAO, GLuint& VBO, float* vertices, size_t size);
 void ConfigurarTexturaRepetible(GLuint textureID);
 void DibujarPiso(GLuint textureID, glm::vec3 posicion, glm::vec3 escala, GLuint VAO_Cubo, GLint modelLoc);
-
 
 // Propiedades de la ventana
 const GLuint WIDTH = 1024, HEIGHT = 720;
 int SCREEN_WIDTH, SCREEN_HEIGHT;
 
-
 // Configuración de la cámara
 Camera  camera(glm::vec3(0.0f, 1.0f, 21.0f));
 GLfloat lastX = WIDTH / 2.0;
 GLfloat lastY = HEIGHT / 2.0;
-
 bool keys[1024];
 bool firstMouse = true;
 // Posiciones de las luces
@@ -59,9 +48,6 @@ bool active;
 // Posiciones para luces puntuales 
 glm::vec3 pointLightPositions[] = {
 	glm::vec3(2.0f, 0.2f,  2.0f),  // Esquina 1 (Positivo X, Positivo Z)
-	glm::vec3(-2.0f, 0.2f,  2.0f),  // Esquina 2 (Negativo X, Positivo Z)
-	glm::vec3(2.0f, 0.2f, -2.0f),  // Esquina 3 (Positivo X, Negativo Z)
-	glm::vec3(-2.0f, 0.2f, -2.0f)   // Esquina 4 (Negativo X, Negativo Z)
 };
 
 
@@ -71,7 +57,35 @@ glm::vec3 pointLightPositions[] = {
 // =================================================================================
 
 // -----------------------------------------
-//  DESIERTO
+//  SELVA (X,Z)
+// -----------------------------------------
+
+
+// -----------------------------------------
+//  ACUARIO (X,-Z)
+// -----------------------------------------
+
+// -----------------------------------------
+//  SABANA (-X,-Z)
+// -----------------------------------------
+
+//  ELEFANTE (Cuadrante -X, -Z)
+float rotElefante = 0.0f;
+float elefanteLegFL = 0.0f;
+float elefanteLegFR = 0.0f;
+float elefanteLegBL = 0.0f;
+float elefanteLegBR = 0.0f;
+float elefanteTrompa = 0.0f;
+float elefanteScale = 0.50f;
+glm::vec3 elefantePos = glm::vec3(-6.0f, -0.4f, -10.0f);
+
+bool animarElefante = false;
+float startTimeElefante = 0.0f;
+bool teclaV_presionada = false;
+
+
+// -----------------------------------------
+//  DESIERTO (-X,Z)
 // -----------------------------------------
 
 //  CAMELLO (Cuadrante -X, Z)
@@ -84,7 +98,6 @@ float camelHead = 0.0f;
 float camelTail = 0.0f;
 float camelScale = 0.65f;
 glm::vec3 camelPos = glm::vec3(-6.0f, -0.5f, 10.0f);
-
 bool animarCamello = false;
 float startTimeCamello = 0.0f;
 bool teclaC_presionada = false;
@@ -110,7 +123,7 @@ glm::vec3 condorPos = glm::vec3(-6.7f, 0.5f, 6.0f);
 bool animarCondor = false;
 
 
-// Vértices del cubo
+// Vértices para el piso
 float vertices[] = {
 	// Posiciones           // Normales           // Coordenadas de Textura (U, V)
 	// Cara Trasera (-Z)
@@ -158,46 +171,61 @@ float vertices[] = {
 };
 
 
+// Vértices para PAREDES 
+float verticesPared[] = {
+	// Cara Trasera (-Z) - CORREGIDO: más repeticiones horizontales
+	-0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   0.0f, 0.0f,
+	 0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   15.0f, 0.0f,  // Aumentado de 3.0 a 10.0
+	 0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   15.0f, 5.0f,  // Aumentado de 3.0 a 10.0
+	 0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   15.0f, 5.0f,
+	-0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   0.0f, 5.0f,
+	-0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   0.0f, 0.0f,
+
+	// Cara Frontal (+Z)
+	-0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   0.0f, 0.0f,
+	 0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   15.0f, 0.0f,
+	 0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   15.0f, 5.0f,
+	 0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   15.0f, 5.0f,
+	-0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   0.0f, 5.0f,
+	-0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   0.0f, 0.0f,
+
+	// Cara Izquierda (-X)
+	-0.5f,  0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,   5.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,   5.0f, 15.0f,
+	-0.5f, -0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,   0.0f, 15.0f,
+	-0.5f, -0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,   0.0f, 15.0f,
+	-0.5f, -0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,   0.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,   5.0f, 0.0f,
+
+	// Cara Derecha (+X)
+	 0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f,   5.0f, 0.0f,
+	 0.5f,  0.5f, -0.5f,   1.0f,  0.0f,  0.0f,   5.0f, 15.0f,
+	 0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f,   0.0f, 15.0f,
+	 0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f,   0.0f, 15.0f,
+	 0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f,   0.0f, 0.0f,
+	 0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f,   5.0f, 0.0f,
+
+	 // Cara Inferior (-Y)
+	 -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,   0.0f, 5.0f,
+	  0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,   5.0f, 5.0f,
+	  0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,   5.0f, 0.0f,
+	  0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,   5.0f, 0.0f,
+	 -0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,   0.0f, 0.0f,
+	 -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,   0.0f, 5.0f,
+
+	 // Cara Superior (+Y)
+	 -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,   0.0f, 5.0f,
+	  0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,   5.0f, 5.0f,
+	  0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,   5.0f, 0.0f,
+	  0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,   5.0f, 0.0f,
+	 -0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,   0.0f, 0.0f,
+	 -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,   0.0f, 5.0f
+};
 glm::vec3 Light1 = glm::vec3(0);
 
 // Deltatime
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
 GLfloat lastFrame = 0.0f;  	// Time of last frame
-
-
-void pataDraw(glm::mat4 modelo, glm::vec3 escala, glm::vec3 traslado, GLint uniformModel, GLuint VAO, GLuint texturaID)
-{
-	// 1. Configurar la matriz del modelo para esta parte
-	modelo = glm::mat4(1);
-	modelo = glm::scale(modelo, escala); // tamaño
-	modelo = glm::translate(modelo, traslado);// posición
-	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(modelo));
-
-	// 2. Activar y enlazar la textura específica para esta parte
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texturaID);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, texturaID); 
-
-	// 3. Enlazar el VAO del cubo
-	glBindVertexArray(VAO);
-
-	// 4. Habilitar TODOS los atributos que usa lightingShader
-	// (El lampShader los deshabilita, así que hay que volver a habilitarlos)
-	glEnableVertexAttribArray(0); // Posición
-	glEnableVertexAttribArray(1); // Normal
-	glEnableVertexAttribArray(2); // TexCoords
-
-	// 5. Dibujar el cubo
-	glDrawArrays(GL_TRIANGLES, 0, 36);
-
-	// 6. Desvincular
-	glBindVertexArray(0);
-
-
-}
-
 
 
 int main()
@@ -323,7 +351,19 @@ int main()
 	// 						CARGA DE MODELOS - Sabana (-X,-Z)
 	// =================================================================================
 
+	//ELEFANTE
+	 
+	Model ElefanteBody((char*)"Models/elefante/elefante_cuerpo.obj");
+	Model ElefanteTrompa((char*)"Models/elefante/elefante_trompa.obj");
+	Model ElefanteLeg_FL((char*)"Models/elefante/elefante_pata_izq_enfr.obj");
+	Model ElefanteLeg_FR((char*)"Models/elefante/elefante_pata_der_enfr.obj");
+	Model ElefanteLeg_BL((char*)"Models/elefante/elefante_pata_izq_atras.obj");
+	Model ElefanteLeg_BR((char*)"Models/elefante/elefante_pata_der_atras.obj");
+	
+	//JIRAFA
 
+
+	//
 
 	// =================================================================================
 	// 						Carga de Texturas para los pisos
@@ -333,12 +373,17 @@ int main()
 	// PARA ESTA PARTE YA HAY UNA FUNCION LA CUAL ES ConfigurarTexturaRepetible para que la usen
 	// y no tengan que poner todo el codigo repetido ConfigurarTexturaRepetible(variablePiso);
 
-	// ***TEXTURA GENERAL PARA EL PISO ***
+	// ***TEXTURA GENERAL PARA EL PISO GENERAL***
 	GLuint pisoTextureID = TextureFromFile("images/ladrillo.png", ".");
 	ConfigurarTexturaRepetible(pisoTextureID);
-
+	
+	// *** TEXTURA PARA EL PISO ENTRADA ***
 	GLuint pisoEntradaID = TextureFromFile("images/pasto.jpg", ".");
 	ConfigurarTexturaRepetible(pisoEntradaID);
+
+	// *** TEXTURA PARA LAS PAREDES ***
+	GLuint paredTextureID = TextureFromFile("images/muro.jpg", ".");
+	ConfigurarTexturaRepetible(paredTextureID);
 
 	// *** TEXTURA PARA EL PISO ACUARIO ***
 	GLuint pisoAcuarioTextureID = TextureFromFile("images/acuario.jpg", ".");
@@ -356,84 +401,31 @@ int main()
 	GLuint pisoArenaTextureID = TextureFromFile("images/sand.jpg", ".");
 	ConfigurarTexturaRepetible(pisoArenaTextureID);
 
-
-	// =================================================================================
-	// 					CONFIGURACIÓN DE VÉRTICES PARA PRIMITIVAS
-	// =================================================================================
-
-	GLuint VBO, VAO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	// Position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-	glEnableVertexAttribArray(0);
-	// normal attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	// Set texture units
-	lightingShader.Use();
-	glUniform1i(glGetUniformLocation(lightingShader.Program, "Material.difuse"), 0);
-	glUniform1i(glGetUniformLocation(lightingShader.Program, "Material.specular"), 1);
+	// Altura de la pared
+	float alturaPared = 3.0f;
+	// Escala general del área
+	float tamanoBase = 25.0f;
 
 	glm::mat4 projection = glm::perspective(camera.GetZoom(), (GLfloat)SCREEN_WIDTH / (GLfloat)SCREEN_HEIGHT, 0.1f, 100.0f);
 
+
 	// =================================================================================
-		// 					CONFIGURACIÓN DE VÉRTICES PARA PRIMITIVAS (CUBO)
-		// =================================================================================
+	// 		CONFIGURACIÓN DE VÉRTICES PARA PISO GENERAL
+	// =================================================================================
 	GLuint VBO_Cubo, VAO_Cubo;
-	glGenVertexArrays(1, &VAO_Cubo);
-	glGenBuffers(1, &VBO_Cubo);
-	glBindVertexArray(VAO_Cubo);
+	ConfigurarVAO(VAO_Cubo, VBO_Cubo, vertices, sizeof(vertices));
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_Cubo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glBindVertexArray(VAO_Cubo); // Enlazar el VAO
-
-	// Atributo de Posición (Location 0)
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(1);
-
-	// Atributo de Normal (Location 1)
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	// Atributo de Coordenadas de Textura (Location 2)
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-	glBindVertexArray(0); // Desvincular el VAO
-
-
+	// =================================================================================
+	// 		CONFIGURACIÓN DE VÉRTICES PARA PAREDES
+	// =================================================================================
+	GLuint VBO_Pared, VAO_Pared;
+	ConfigurarVAO(VAO_Pared, VBO_Pared, verticesPared, sizeof(verticesPared));
 
 	// =================================================================================
 	// 		CONFIGURACIÓN DE VÉRTICES PARA PISO DE ENTRADA
 	// =================================================================================
 	GLuint VBO_Entrada, VAO_Entrada;
-	glGenVertexArrays(1, &VAO_Entrada);
-	glGenBuffers(1, &VBO_Entrada);
-	glBindVertexArray(VAO_Entrada);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_Entrada);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	// Atributo de Posición (Location 0)
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	// Atributo de Normal (Location 1)
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	// Atributo de Coordenadas de Textura (Location 2)
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-	glBindVertexArray(0); // Desvincular el VAO
+	ConfigurarVAO(VAO_Entrada, VBO_Entrada, vertices, sizeof(vertices));
 
 
 	// =================================================================================
@@ -475,10 +467,10 @@ int main()
 
 
 		// Luz Direccional (dirLight)
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.direction"), -0.2f, -1.0f, -0.3f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.ambient"), 0.05f, 0.05f, 0.05f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.diffuse"), 0.6f, 0.6f, 0.6f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.specular"), 0.6f, 0.6f, 0.6f);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.direction"), -0.4f, -1.0f, -0.2f);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.ambient"), 0.15f, 0.13f, 0.10f); 
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.diffuse"), 0.9f, 0.85f, 0.75f); 
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.specular"), 1.0f, 0.95f, 0.85f);
 
 		// Luces Puntuales (pointLights) - Usando los colores de las lámparas
 		// Point light 1
@@ -497,33 +489,6 @@ int main()
 		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[0].quadratic"), 0.075f);
 
 
-
-		// Point light 2
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[1].position"), pointLightPositions[1].x, pointLightPositions[1].y, pointLightPositions[1].z);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[1].ambient"), 0.05f, 0.05f, 0.05f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[1].diffuse"), 0.0f, 0.0f, 0.0f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[1].specular"), 0.0f, 0.0f, 0.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[1].constant"), 1.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[1].linear"), 0.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[1].quadratic"), 0.0f);
-
-		// Point light 3
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[2].position"), pointLightPositions[2].x, pointLightPositions[2].y, pointLightPositions[2].z);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[2].ambient"), 0.0f, 0.0f, 0.0f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[2].diffuse"), 0.0f, 0.0f, 0.0f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[2].specular"), 0.0f, 0.0f, 0.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[2].constant"), 1.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[2].linear"), 0.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[2].quadratic"), 0.0f);
-
-		// Point light 4
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[3].position"), pointLightPositions[3].x, pointLightPositions[3].y, pointLightPositions[3].z);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[3].ambient"), 0.0f, 0.0f, 0.0f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[3].diffuse"), 0.0f, 0.0f, 0.0f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[3].specular"), 0.0f, 0.0f, 0.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[3].constant"), 1.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[3].linear"), 0.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[3].quadratic"), 0.0f);
 		// SpotLight  //una luz tipo linterna en la cámara
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.position"), camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.direction"), camera.GetFront().x, camera.GetFront().y, camera.GetFront().z);
@@ -537,7 +502,7 @@ int main()
 		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.outerCutOff"), glm::cos(glm::radians(10.0f)));
 
 		// Set material properties
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "material.shininess"), 2.0f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "material.shininess"), 32.0f);
 
 		// Create camera transformations
 		glm::mat4 view;
@@ -561,38 +526,6 @@ int main()
 		// 							CARGA DE TEXTURAS
 		// ---------------------------------------------------------------------------------
 
-		//GLuint texMadera, texMetal, texPlastico;
-		//int textureWidth, textureHeight, nrChannels;
-		//unsigned char* image;
-
-		//// Función lambda para cargar texturas
-		//auto cargarTextura = [&](const char* path, GLuint& tex) {
-		//	glGenTextures(1, &tex);
-		//	glBindTexture(GL_TEXTURE_2D, tex);
-		//	stbi_set_flip_vertically_on_load(true);
-		//	image = stbi_load(path, &textureWidth, &textureHeight, &nrChannels, 0);
-		//	if (image)
-		//	{
-		//		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-		//		glGenerateMipmap(GL_TEXTURE_2D);
-		//	}
-		//	else
-		//	{
-		//		std::cout << "Failed to load texture: " << path << std::endl;
-		//	}
-		//	stbi_image_free(image);
-
-		//	// Parámetros de textura
-		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		//	};
-
-		//// Cargar las tres texturas
-		//cargarTextura("images/madera.jpg", texMadera);
-		//cargarTextura("images/madera.jpg", texMetal);
-		//cargarTextura("images/madera.jpg", texPlastico);
 
 
 		// ---------------------------------------------------------------------------------
@@ -607,7 +540,21 @@ int main()
 		// DIBUJO DEL PASTO ENTRADA
 		DibujarPiso(pisoEntradaID, glm::vec3(0.0f, -0.5f, 17.5f), glm::vec3(25.0f, 0.1f, 10.0f), VAO_Cubo, modelLoc);
 
+		//Dibujo de las paredes 
+		
+		// Pared trasera (Z negativa)
+		DibujarPiso(paredTextureID, glm::vec3(0.0f, alturaPared / 2 - 0.5f, -tamanoBase / 2),
+			glm::vec3(tamanoBase, alturaPared, 0.2f), VAO_Pared, modelLoc);
 
+
+
+		// Pared izquierda (X negativa)
+		DibujarPiso(paredTextureID, glm::vec3(-tamanoBase / 2, alturaPared / 2 - 0.5f, 0.0f),
+			glm::vec3(0.2f, alturaPared, tamanoBase), VAO_Pared, modelLoc);
+
+		// Pared derecha (X positiva)
+		DibujarPiso(paredTextureID, glm::vec3(tamanoBase / 2, alturaPared / 2 - 0.5f, 0.0f),
+			glm::vec3(0.2f, alturaPared, tamanoBase), VAO_Pared, modelLoc);
 
 
 		// ---------------------------------------------------------------------------------
@@ -648,6 +595,114 @@ int main()
 
 
 		// **** DIBUJO DE ANIMALES SABANA ****
+
+
+		//ELEFANTE
+
+		model = glm::mat4(1);
+		model = glm::translate(model, elefantePos);
+		model = glm::rotate(model, glm::radians(rotElefante), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(elefanteScale));
+		modelTemp = model;
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		ElefanteBody.Draw(lightingShader);
+
+		// Trompa (con rotación en X para moverla arriba/abajo)
+		glm::vec3 elefantePivotTrompa(0.0f, 1.0f, 0.5f); // Ajustar según modelo
+		model = modelTemp;
+		model = glm::translate(model, elefantePivotTrompa);
+		model = glm::rotate(model, glm::radians(elefanteTrompa), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -elefantePivotTrompa);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		ElefanteTrompa.Draw(lightingShader);
+
+		// Pierna delantera izquierda
+		glm::vec3 elefantePivotFL(0.3f, 1.2f, 0.5f);
+		model = modelTemp;
+		model = glm::translate(model, elefantePivotFL);
+		model = glm::rotate(model, glm::radians(elefanteLegFL), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -elefantePivotFL);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		ElefanteLeg_FL.Draw(lightingShader);
+
+		// Pierna delantera derecha
+		glm::vec3 elefantePivotFR(-0.3f, 1.2f, 0.5f);
+		model = modelTemp;
+		model = glm::translate(model, elefantePivotFR);
+		model = glm::rotate(model, glm::radians(elefanteLegFR), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -elefantePivotFR);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		ElefanteLeg_FR.Draw(lightingShader);
+
+		// Pierna trasera izquierda
+		glm::vec3 elefantePivotBL(0.3f, 1.2f, -0.5f);
+		model = modelTemp;
+		model = glm::translate(model, elefantePivotBL);
+		model = glm::rotate(model, glm::radians(elefanteLegBL), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -elefantePivotBL);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		ElefanteLeg_BL.Draw(lightingShader);
+
+		// Pierna trasera derecha
+		glm::vec3 elefantePivotBR(-0.3f, 1.2f, -0.5f);
+		model = modelTemp;
+		model = glm::translate(model, elefantePivotBR);
+		model = glm::rotate(model, glm::radians(elefanteLegBR), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -elefantePivotBR);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		ElefanteLeg_BR.Draw(lightingShader);
+
+		//ELEFANTE - ANIMACIÓN
+
+		if (animarElefante)
+		{
+			float t = glfwGetTime() - startTimeElefante;
+
+			// FASE 1: CAMINANDO
+			if (t < 8.0f)
+			{
+				// Movimiento de avance en Z de -10 a -5
+				float totalDist = 5.0f; // distancia = 5 unidades
+				elefantePos.z = -10.0f + (t * (totalDist / 8.0f)); // avanza desde Z=-10 hasta Z=-5
+
+				// Movimiento de patas
+				float paso = sin(t * 2.0f);
+				elefanteLegFL = paso * 10.0f;  // pata frontal izq
+				elefanteLegBR = paso * 15.0f;  // pata trasera der
+				elefanteLegFR = -paso * 10.0f; // pata frontal der (opuesta)
+				elefanteLegBL = -paso * 15.0f; // pata trasera izq (opuesta)
+
+				// Trompa en movimiento
+				elefanteTrompa = sin(t * 0.5f) * 5.0f; // movimiento
+				rotElefante = 0.0f;
+			}
+
+			// FASE 2: DETENIDO, MOVIENDO LA TROMPA
+			else if (t < 14.0f)
+			{
+				float t2 = t - 8.0f;
+				elefantePos.z = -5.0f; // llega al punto
+
+				// Detiene patas 
+				elefanteLegFL = sin(t2 * 1.0f) * 5.0f;
+				elefanteLegFR = -elefanteLegFL;
+				elefanteLegBL = -elefanteLegFR;
+				elefanteLegBR = elefanteLegFR;
+
+				// Movimiento de trompa hacia arriba y abajo
+				elefanteTrompa = (sin(t2 * 0.5f) + 1.0f) * 2.0f;
+				rotElefante = 0.0f;
+			}
+
+			// QUIETO
+			else
+			{
+				elefantePos.z = -5.0f;
+				elefanteTrompa = 0.0f;
+				elefanteLegFL = elefanteLegFR = elefanteLegBL = elefanteLegBR = 0.0f;
+				rotElefante = 0.0f;
+			}
+		}
 
 
 
@@ -875,6 +930,32 @@ int main()
 }
 
 
+// --- Función para configurar VAO/VBO genérico ---
+void ConfigurarVAO(GLuint& VAO, GLuint& VBO, float* vertices, size_t size)
+{
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glBindVertexArray(VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+
+	// Atributo de Posición (Location 0)
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	// Atributo de Normal (Location 1)
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// Atributo de Coordenadas de Textura (Location 2)
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	glBindVertexArray(0);
+}
+
+
 
 // --- Función para configurar los parametros del piso de textura ---
 void ConfigurarTexturaRepetible(GLuint textureID)
@@ -947,6 +1028,21 @@ void DoMovement()
 		camera.ProcessKeyboard(RIGHT, deltaTime);
 		
 
+	}
+
+	//ELEFANTE
+	if (keys[GLFW_KEY_V])
+	{
+		if (!teclaV_presionada)
+		{
+			animarElefante = !animarElefante;
+			startTimeElefante = glfwGetTime();
+			teclaV_presionada = true;
+		}
+	}
+	else
+	{
+		teclaV_presionada = false;
 	}
 
 	//CAMELLO
