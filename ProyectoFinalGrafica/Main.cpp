@@ -60,6 +60,20 @@ glm::vec3 pointLightPositions[] = {
 //  SELVA (X,Z)
 // -----------------------------------------
 
+//  CAPIBARA (Cuadrante X, Z)
+float capibaraScale = 1.0f;
+float rotCapibara = 180.0f;
+float capibaraCabezaRot = 0.0f;
+float capibaraNaranjaRot = 0.0f;
+float capibaraPataDelDer = 0.0f;
+float capibaraPataDelIzq = 0.0f;
+float capibaraPataTrasDer = 0.0f;
+float capibaraPataTrasIzq = 0.0f;
+glm::vec3 capibaraPos = glm::vec3(10.0f, 0.0f, 8.0f);
+bool animarCapibara = false;
+float startTimeCapibara = 0.0f;
+bool teclaP_presionada = false;
+
 
 // -----------------------------------------
 //  ACUARIO (X,-Z)
@@ -291,8 +305,14 @@ int main()
 	// 						CARGA DE MODELOS - Selva (X,Z)
 	// =================================================================================
 
-
-
+	//Capibara
+	Model Capibara_Cabeza((char*)"Models/capibara/cabezaCapi.obj");
+	Model Capibara_Cuerpo((char*)"Models/capibara/cuerpoCapi.obj");
+	Model Capibara_Naranja((char*)"Models/capibara/naranjaCapi.obj");
+	Model Capibara_PataDelDer((char*)"Models/capibara/pataDelDerCapi.obj");
+	Model Capibara_PataDelIzq((char*)"Models/capibara/pataDelIzqCapi.obj");
+	Model Capibara_PataTrasDer((char*)"Models/capibara/pataTrasDerCapi.obj");
+	Model Capibara_PataTrasIzq((char*)"Models/capibara/pataTrasIzqCapi.obj");
 
 	// =================================================================================
 	// 						CARGA DE MODELOS - DESIERTO (-X,Z)
@@ -578,12 +598,121 @@ int main()
 		// **** DIBUJO DEL PISO SELVA Y ACCESORIOS SELVA ****
 		DibujarPiso(pisoSelvaTextureID, glm::vec3(7.25f, -0.49f, 7.25f), glm::vec3(10.5f, 0.1f, 10.5f), VAO_Cubo, modelLoc);
 
+		// **** DIBUJO DEL CAPIBARA ****
+		model = glm::mat4(1);
+		model = glm::translate(model, capibaraPos);
+		model = glm::rotate(model, glm::radians(rotCapibara), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(capibaraScale));
+		modelTemp = model;
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Capibara_Cuerpo.Draw(lightingShader);
 
+		// Cabeza (con rotación en Y para moverla izq/der)
+		glm::vec3 capibaraPivotCabeza(0.0f, 0.5f, 0.4f); // Ajustar según tu modelo
+		model = modelTemp;
+		model = glm::translate(model, capibaraPivotCabeza);
+		model = glm::rotate(model, glm::radians(capibaraCabezaRot), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::translate(model, -capibaraPivotCabeza);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Capibara_Cabeza.Draw(lightingShader);
 
+		// Pata delantera derecha
+		glm::vec3 capibaraPivotPataDelDer(0.2f, 0.3f, 0.3f);
+		model = modelTemp;
+		model = glm::translate(model, capibaraPivotPataDelDer);
+		model = glm::rotate(model, glm::radians(capibaraPataDelDer), glm::vec3(0.0f, 0.0f, 1.0f)); // Cambié a eje Z
+		model = glm::translate(model, -capibaraPivotPataDelDer);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Capibara_PataDelDer.Draw(lightingShader);
 
-		// **** DIBUJO DE ANIMALES SELVA ****
+		// Pata delantera izquierda
+		glm::vec3 capibaraPivotPataDelIzq(-0.2f, 0.3f, 0.3f);
+		model = modelTemp;
+		model = glm::translate(model, capibaraPivotPataDelIzq);
+		model = glm::rotate(model, glm::radians(capibaraPataDelIzq), glm::vec3(0.0f, 0.0f, 1.0f)); // Cambié a eje Z
+		model = glm::translate(model, -capibaraPivotPataDelIzq);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Capibara_PataDelIzq.Draw(lightingShader);
 
+		// Pata trasera derecha
+		glm::vec3 capibaraPivotPataTrasDer(0.2f, 0.3f, -0.3f);
+		model = modelTemp;
+		model = glm::translate(model, capibaraPivotPataTrasDer);
+		model = glm::rotate(model, glm::radians(capibaraPataTrasDer), glm::vec3(0.0f, 0.0f, 1.0f)); // Cambié a eje Z
+		model = glm::translate(model, -capibaraPivotPataTrasDer);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Capibara_PataTrasDer.Draw(lightingShader);
 
+		// Pata trasera izquierda
+		glm::vec3 capibaraPivotPataTrasIzq(-0.2f, 0.3f, -0.3f);
+		model = modelTemp;
+		model = glm::translate(model, capibaraPivotPataTrasIzq);
+		model = glm::rotate(model, glm::radians(capibaraPataTrasIzq), glm::vec3(0.0f, 0.0f, 1.0f)); // Cambié a eje Z
+		model = glm::translate(model, -capibaraPivotPataTrasIzq);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Capibara_PataTrasIzq.Draw(lightingShader);
+
+		// Naranja (con rotación en Y)
+		glm::vec3 capibaraPivotNaranja(0.0f, 0.0f, 0.0f); // Pivote en el CENTRO de la naranja
+		model = modelTemp;
+		model = glm::translate(model, capibaraPivotNaranja);
+		model = glm::rotate(model, glm::radians(capibaraNaranjaRot), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::translate(model, -capibaraPivotNaranja);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Capibara_Naranja.Draw(lightingShader);
+
+		// CAPIBARA - ANIMACIÓN
+		if (animarCapibara)
+		{
+			float t = glfwGetTime() - startTimeCapibara;
+
+			// FASE 1: CAMINANDO (10 segundos)
+			if (t < 10.0f)
+			{
+				float totalDist = 5.0f;
+				capibaraPos.x = 10.0f - (t * (totalDist / 10.0f));
+
+				// Movimiento de patas
+				float paso = sin(t * 6.0f);
+				capibaraPataDelDer = paso * 1.5f;
+				capibaraPataTrasIzq = paso * 1.5f;
+				capibaraPataDelIzq = -paso * 1.5f;
+				capibaraPataTrasDer = -paso * 1.5f;
+
+				// Naranja rotando mientras camina
+				capibaraNaranjaRot = t * 180.0f; // Rotación basada en tiempo (en vez de +=)
+
+				capibaraCabezaRot = 0.0f;
+				rotCapibara = 180.0f;
+			}
+			// FASE 2: DETENIDO (6 segundos)
+			else if (t < 9.0f)
+			{
+				float t2 = t - 10.0f;
+				capibaraPos.x = 5.0f;
+
+				capibaraPataDelDer = sin(t2 * 0.5f) * 2.0f;
+				capibaraPataDelIzq = -capibaraPataDelDer;
+				capibaraPataTrasDer = -capibaraPataDelDer;
+				capibaraPataTrasIzq = capibaraPataDelDer;
+
+				// Naranja regresa gradualmente a posición inicial
+				capibaraNaranjaRot = 1800.0f - (t2 * 300.0f); // Regresa en 6 segundos
+
+				capibaraCabezaRot = 0.0f;
+				rotCapibara = 180.0f;
+			}
+			// FASE 3: QUIETO
+			else
+			{
+				capibaraPos.x = 5.0f;
+				capibaraCabezaRot = 0.0f;
+				capibaraPataDelDer = capibaraPataDelIzq = 0.0f;
+				capibaraPataTrasDer = capibaraPataTrasIzq = 0.0f;
+				capibaraNaranjaRot = 0.0f; // Naranja en posición inicial
+				rotCapibara = 180.0f;
+			}
+		}
 
 		// ---------------------------------------------------------------------------------
 		// 							DIBUJO DE MODELOS SABANA (-x,-z)
@@ -1058,6 +1187,21 @@ void DoMovement()
 	else
 	{
 		teclaC_presionada = false;
+	}
+	
+	//CAPIBARA
+	if (keys[GLFW_KEY_B])
+	{
+		if (!teclaP_presionada) // Reutilizas la variable que ya tienes
+		{
+			animarCapibara = !animarCapibara;
+			startTimeCapibara = glfwGetTime();
+			teclaP_presionada = true;
+		}
+	}
+	else
+	{
+		teclaP_presionada = false;
 	}
 
 
