@@ -83,6 +83,20 @@ bool animarElefante = false;
 float startTimeElefante = 0.0f;
 bool teclaV_presionada = false;
 
+// JIRAFA (Cuadrante -X, -Z)
+float jirafaScale = 0.35f;
+float rotJirafa = 0.0f; 
+float jirafaCabezaRot = 0.0f;
+float jirafaColaRot = 0.0f;
+float jirafaPataDelDer = 0.0f;
+float jirafaPataDelIzq = 0.0f;
+float jirafaPataTrasDer = 0.0f;
+float jirafaPataTrasIzq = 0.0f;
+glm::vec3 jirafaPos = glm::vec3(-10.0f, 0.7f, -10.0f);
+bool animarJirafa = false;
+float startTimeJirafa = 0.0f;
+bool teclaJ_presionada = false; 
+
 
 // -----------------------------------------
 //  DESIERTO (-X,Z)
@@ -351,6 +365,11 @@ int main()
 	// 						CARGA DE MODELOS - Sabana (-X,-Z)
 	// =================================================================================
 
+	Model Arbol((char*)"Models/arbol/arbol.obj");
+	glm::vec3 arbolPos(-11.0f, 1.0f, -3.2f); 
+	glm::vec3 arbolScale(3.5f, 3.5f, 3.5f);
+	float arbolRot = 0.0f;
+	// 
 	//ELEFANTE
 	 
 	Model ElefanteBody((char*)"Models/elefante/elefante_cuerpo.obj");
@@ -362,9 +381,16 @@ int main()
 	
 	//JIRAFA
 
+	Model Jirafa_Cabeza((char*)"Models/jirafa/cabezaJirafa.obj");
+	Model Jirafa_Cola((char*)"Models/jirafa/colaJirafa.obj");
+	Model Jirafa_Cuerpo((char*)"Models/jirafa/cuerpoJirafa.obj");
+	Model Jirafa_PataDelDer((char*)"Models/jirafa/pataDelDerJirafa.obj");
+	Model Jirafa_PataDelIzq((char*)"Models/jirafa/pataDelIzqJirafa.obj");
+	Model Jirafa_PataTrasDer((char*)"Models/jirafa/pataTrasDerJirafa.obj");
+	Model Jirafa_PataTrasIzq((char*)"Models/jirafa/pataTrasIzqJirafa.obj");
 
 	//
-
+	
 	// =================================================================================
 	// 						Carga de Texturas para los pisos
 	// =================================================================================
@@ -592,6 +618,13 @@ int main()
 		// **** DIBUJO DEL PISO SABANA Y ACCESORIOS SABANA ****
 		DibujarPiso(pisoSabanaTextureID, glm::vec3(-7.25f, -0.49f, -7.25f), glm::vec3(10.5f, 0.1f, 10.5f), VAO_Cubo, modelLoc);
 
+		//// --- Arbol ---
+		model = glm::mat4(1);
+		model = glm::translate(model, arbolPos);
+		model = glm::scale(model, arbolScale);
+		model = glm::rotate(model, glm::radians(arbolRot), glm::vec3(0.0f, 1.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Arbol.Draw(lightingShader);
 
 
 		// **** DIBUJO DE ANIMALES SABANA ****
@@ -704,6 +737,127 @@ int main()
 			}
 		}
 
+		//JIRAFA
+		// **** DIBUJO DE LA JIRAFA ****
+		model = glm::mat4(1);
+		model = glm::translate(model, jirafaPos);
+		model = glm::rotate(model, glm::radians(rotJirafa), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(jirafaScale));
+		modelTemp = model;
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Jirafa_Cuerpo.Draw(lightingShader);
+
+		// Cabeza (con rotación en X para moverla arriba/abajo)
+		glm::vec3 jirafaPivotCabeza(0.0f, 1.5f, 0.3f); // Ajustar según tu modelo (cuello alto)
+		model = modelTemp;
+		model = glm::translate(model, jirafaPivotCabeza);
+		model = glm::rotate(model, glm::radians(jirafaCabezaRot), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -jirafaPivotCabeza);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Jirafa_Cabeza.Draw(lightingShader);
+
+		// Cola (con rotación en X para moverla)
+		glm::vec3 jirafaPivotCola(0.0f, 0.8f, -0.5f); // Ajustar según tu modelo
+		model = modelTemp;
+		model = glm::translate(model, jirafaPivotCola);
+		model = glm::rotate(model, glm::radians(jirafaColaRot), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -jirafaPivotCola);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Jirafa_Cola.Draw(lightingShader);
+		
+		// Pata delantera derecha
+		glm::vec3 jirafaPivotPataDelDer(0.3f, 0.8f, 0.4f);
+		model = modelTemp;
+		model = glm::translate(model, jirafaPivotPataDelDer);
+		model = glm::rotate(model, glm::radians(jirafaPataDelDer), glm::vec3(1.0f, 0.0f, 0.0f)); // CAMBIÉ A EJE X
+		model = glm::translate(model, -jirafaPivotPataDelDer);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Jirafa_PataDelDer.Draw(lightingShader);
+
+		// Pata delantera izquierda
+		glm::vec3 jirafaPivotPataDelIzq(-0.3f, 0.8f, 0.4f);
+		model = modelTemp;
+		model = glm::translate(model, jirafaPivotPataDelIzq);
+		model = glm::rotate(model, glm::radians(jirafaPataDelIzq), glm::vec3(1.0f, 0.0f, 0.0f)); // CAMBIÉ A EJE X
+		model = glm::translate(model, -jirafaPivotPataDelIzq);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Jirafa_PataDelIzq.Draw(lightingShader);
+
+		// Pata trasera derecha
+		glm::vec3 jirafaPivotPataTrasDer(0.3f, 0.8f, -0.4f);
+		model = modelTemp;
+		model = glm::translate(model, jirafaPivotPataTrasDer);
+		model = glm::rotate(model, glm::radians(jirafaPataTrasDer), glm::vec3(1.0f, 0.0f, 0.0f)); // CAMBIÉ A EJE X
+		model = glm::translate(model, -jirafaPivotPataTrasDer);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Jirafa_PataTrasDer.Draw(lightingShader);
+
+		// Pata trasera izquierda
+		glm::vec3 jirafaPivotPataTrasIzq(-0.3f, 0.8f, -0.4f);
+		model = modelTemp;
+		model = glm::translate(model, jirafaPivotPataTrasIzq);
+		model = glm::rotate(model, glm::radians(jirafaPataTrasIzq), glm::vec3(1.0f, 0.0f, 0.0f)); // CAMBIÉ A EJE X
+		model = glm::translate(model, -jirafaPivotPataTrasIzq);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Jirafa_PataTrasIzq.Draw(lightingShader);
+
+		// JIRAFA - ANIMACIÓN
+		if (animarJirafa)
+		{
+			float t = glfwGetTime() - startTimeJirafa;
+			// FASE 1: CAMINANDO (4 segundos) - MÁS RÁPIDO
+			if (t < 4.0f)
+			{
+				// Movimiento en Z de -10 a -6 (avanza 4 unidades)
+				float totalDist = 4.0f; // Cambié de 3.0f a 4.0f
+				jirafaPos.z = -10.0f + (t * (totalDist / 4.0f));
+
+				// Movimiento de patas (caminata lenta de jirafa)
+				float paso = sin(t * 5.5f);
+				jirafaPataDelDer = paso * 2.5f;
+				jirafaPataTrasDer = paso * 2.5f;
+				jirafaPataDelIzq = -paso * 2.5f;
+				jirafaPataTrasIzq = -paso * 2.5f;
+
+				// Cabeza balanceándose MÁS SUAVE mientras camina
+				jirafaCabezaRot = sin(t * 0.5f) * 2.0f;
+
+				// Cola moviéndose MÁS SUAVE
+				jirafaColaRot = sin(t * 1.5f) * 5.0f;
+
+				rotJirafa = 0.0f;
+			}
+			// FASE 2: DETENIDA, COMIENDO HOJAS (4 segundos) - MÁS CORTO
+			else if (t < 8.0f)
+			{
+				float t2 = t - 4.0f;
+				jirafaPos.z = -6.0f; // Cambié de -7.0f a -6.0f
+
+				// Patas deteniéndose gradualmente
+				jirafaPataDelDer = sin(t2 * 0.5f) * 0.5f;
+				jirafaPataDelIzq = -jirafaPataDelDer;
+				jirafaPataTrasDer = -jirafaPataDelDer;
+				jirafaPataTrasIzq = jirafaPataDelDer;
+
+				// Cabeza bajando MUY SUTILMENTE (comiendo hojas)
+				jirafaCabezaRot = sin(t2 * 1.0f) * 3.0f;
+
+				// Cola moviéndose MUY SUAVEMENTE
+				jirafaColaRot = sin(t2 * 0.8f) * 2.0f;
+
+				rotJirafa = 0.0f;
+			}
+			// FASE 3: QUIETA
+			else
+			{
+				jirafaPos.z = -6.0f; // Cambié de -7.0f a -6.0f
+				jirafaCabezaRot = 0.0f;
+				jirafaColaRot = 0.0f;
+				jirafaPataDelDer = jirafaPataDelIzq = 0.0f;
+				jirafaPataTrasDer = jirafaPataTrasIzq = 0.0f;
+				rotJirafa = 0.0f;
+			}
+		}
 
 
 		// ---------------------------------------------------------------------------------
@@ -1058,6 +1212,21 @@ void DoMovement()
 	else
 	{
 		teclaC_presionada = false;
+	}
+
+	//JIRAFA
+	if (keys[GLFW_KEY_J])
+	{
+		if (!teclaJ_presionada)
+		{
+			animarJirafa = !animarJirafa;
+			startTimeJirafa = glfwGetTime();
+			teclaJ_presionada = true;
+		}
+	}
+	else
+	{
+		teclaJ_presionada = false;
 	}
 
 
