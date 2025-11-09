@@ -390,7 +390,7 @@ int main()
 	ConfigurarTexturaRepetible(pisoAcuarioTextureID);
 
 	// *** TEXTURA PARA EL PISO SELVA ***
-	GLuint pisoSelvaTextureID = TextureFromFile("images/selva.jpg", ".");
+	GLuint pisoSelvaTextureID = TextureFromFile("images/selva.png", ".");
 	ConfigurarTexturaRepetible(pisoSelvaTextureID);
 
 	// *** TEXTURA PARA EL PISO SABANA ***
