@@ -1,0 +1,77 @@
+# Blender 4.5.2 LTS MTL File: 'oasis.blend'
+# www.blender.org
+
+newmtl Tree_0Mat
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd Tree_0Mat_baseColor.png
+map_Bump -bm 1.000000 Tree_0Mat_normal.png
+
+newmtl Tree_0Mat1
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd Tree_0Mat1_baseColor.png
+map_Bump -bm 1.000000 Tree_0Mat1_normal.png
+
+newmtl Tree_1Mat1
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 2
+map_Kd Tree_1Mat1_baseColor.png
+map_d Tree_1Mat1_baseColor.png
+map_Bump -bm 1.000000 Tree_1Mat1_normal.png
+
+newmtl Tree_3Mat
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd Tree_3Mat_baseColor.png
+map_Bump -bm 1.000000 Tree_3Mat_normal.png
+
+newmtl Water
+Ns 861.890808
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.001259 0.001545 0.017694
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd Water_baseColor.png
+map_Bump -bm 0.857907 Water_normal.png
+
+newmtl lambert1
+Ns 45.640511
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd sand.jpg
+
+newmtl lambert5
+Ns 52.944134
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd lambert5_baseColor.jpeg
