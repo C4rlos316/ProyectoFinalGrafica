@@ -96,15 +96,15 @@ bool teclaM_presionada = false;
 // -----------------------------------------
 
 //  ELEFANTE (Cuadrante -X, -Z)
-float rotElefante = 0.0f;
+float rotElefante = 90.0f;
+float rotElefanteLado = 0.0f;
 float elefanteLegFL = 0.0f;
 float elefanteLegFR = 0.0f;
 float elefanteLegBL = 0.0f;
 float elefanteLegBR = 0.0f;
 float elefanteTrompa = 0.0f;
 float elefanteScale = 0.50f;
-glm::vec3 elefantePos = glm::vec3(-6.0f, -0.4f, -10.0f);
-
+glm::vec3 elefantePos = glm::vec3(-11.0f, -0.4f, -10.5f);
 bool animarElefante = false;
 float startTimeElefante = 0.0f;
 bool teclaV_presionada = false;
@@ -147,6 +147,7 @@ float condorAlaDer = 0.0f;
 float condorScale = 0.70f;
 glm::vec3 condorPos = glm::vec3(-6.7f, 0.5f, 6.0f);
 bool animarCondor = false;
+bool teclaZ_presionada = false;
 
 
 // Vértices para el piso
@@ -411,6 +412,14 @@ int main()
 	// =================================================================================
 	// 						CARGA DE MODELOS - Sabana (-X,-Z)
 	// =================================================================================
+
+	// ====== ESCENARIO ======
+
+	// ROCA
+	Model Roca((char*)"Models/roca/roca.obj");
+	glm::vec3 RocaPos(-7.25f, -0.5f, -11.8f);
+	glm::vec3 RocaEScale(0.06f, 0.06f, 0.06f);
+	float RocaRot = 270.0f;
 
 	//ELEFANTE
 	 
@@ -957,6 +966,13 @@ int main()
 		// **** DIBUJO DEL PISO SABANA Y ACCESORIOS SABANA ****
 		DibujarPiso(pisoSabanaTextureID, glm::vec3(-7.25f, -0.49f, -7.25f), glm::vec3(10.5f, 0.1f, 10.5f), VAO_Cubo, modelLoc);
 
+		// --- Roca  ---
+		model = glm::mat4(1);
+		model = glm::translate(model, RocaPos);
+		model = glm::scale(model, RocaEScale);
+		model = glm::rotate(model, glm::radians(RocaRot), glm::vec3(0.0f, 1.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Roca.Draw(lightingShader);
 
 
 		// **** DIBUJO DE ANIMALES SABANA ****
@@ -966,14 +982,15 @@ int main()
 
 		model = glm::mat4(1);
 		model = glm::translate(model, elefantePos);
-		model = glm::rotate(model, glm::radians(rotElefante), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::rotate(model, glm::radians(rotElefante), glm::vec3(0.0f, 1.0f, 0.0f));  // Rotación en Y
+		model = glm::rotate(model, glm::radians(rotElefanteLado), glm::vec3(0.0f, 0.0f, 1.0f));  // NUEVA: Rotación lateral (acostarse)
 		model = glm::scale(model, glm::vec3(elefanteScale));
 		modelTemp = model;
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		ElefanteBody.Draw(lightingShader);
 
 		// Trompa (con rotación en X para moverla arriba/abajo)
-		glm::vec3 elefantePivotTrompa(0.0f, 1.0f, 0.5f); // Ajustar según modelo
+		glm::vec3 elefantePivotTrompa(0.0f, 1.0f, 0.5f);
 		model = modelTemp;
 		model = glm::translate(model, elefantePivotTrompa);
 		model = glm::rotate(model, glm::radians(elefanteTrompa), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -1023,62 +1040,82 @@ int main()
 		{
 			float t = glfwGetTime() - startTimeElefante;
 
-			// FASE 1: CAMINANDO
+			// FASE 1: CAMINANDO (0s - 8s)
 			if (t < 8.0f)
 			{
-				// Movimiento de avance en Z de -10 a -5
-				float totalDist = 5.0f; // distancia = 5 unidades
-				elefantePos.z = -10.0f + (t * (totalDist / 8.0f)); // avanza desde Z=-10 hasta Z=-5
+				// Movimiento en EJE X (de -11 a -6)
+				float totalDist = 5.0f;
+				elefantePos.x = -11.0f + (t * (totalDist / 8.0f));
 
 				// Movimiento de patas
 				float paso = sin(t * 2.0f);
-				elefanteLegFL = paso * 10.0f;  // pata frontal izq
-				elefanteLegBR = paso * 15.0f;  // pata trasera der
-				elefanteLegFR = -paso * 10.0f; // pata frontal der (opuesta)
-				elefanteLegBL = -paso * 15.0f; // pata trasera izq (opuesta)
+				elefanteLegFL = paso * 10.0f;
+				elefanteLegBR = paso * 15.0f;
+				elefanteLegFR = -paso * 10.0f;
+				elefanteLegBL = -paso * 15.0f;
 
-				// Trompa en movimiento
-				elefanteTrompa = sin(t * 0.5f) * 5.0f; // movimiento
-				rotElefante = 0.0f;
+				// Trompa en movimiento natural
+				elefanteTrompa = sin(t * 0.5f) * 5.0f;
+				rotElefante = 90.0f;
+				rotElefanteLado = 0.0f;
+				elefantePos.y = -0.4f;
+				elefantePos.z = -10.5f;  
 			}
 
-			// FASE 2: DETENIDO, MOVIENDO LA TROMPA
-			else if (t < 14.0f)
+			// FASE 2: SE ACUESTA DE LADO (8s - 12s)
+			else if (t < 12.0f)
 			{
 				float t2 = t - 8.0f;
-				elefantePos.z = -5.0f; // llega al punto
+				elefantePos.x = -6.0f;
+				elefantePos.z = -10.5f; 
 
-				// Detiene patas 
-				elefanteLegFL = sin(t2 * 1.0f) * 5.0f;
-				elefanteLegFR = -elefanteLegFL;
-				elefanteLegBL = -elefanteLegFR;
-				elefanteLegBR = elefanteLegFR;
+				// Rotación lateral se acuesta de lado
+				rotElefanteLado = t2 * 22.5f;
 
-				// Movimiento de trompa hacia arriba y abajo
-				elefanteTrompa = (sin(t2 * 0.5f) + 1.0f) * 2.0f;
-				rotElefante = 0.0f;
+				// SUBE de -0.4 a 0.0 mientras se acuesta
+				elefantePos.y = -0.4f + (t2 * 0.1f);
+
+				// Patas se mantienen
+				elefanteLegFL = 0.0f;
+				elefanteLegFR = 0.0f;
+				elefanteLegBL = 0.0f;
+				elefanteLegBR = 0.0f;
+
+				// Trompa
+				elefanteTrompa = 5.0f - (t2 * 1.25f);
+				rotElefante = 90.0f;
 			}
 
-			// QUIETO
+			// FASE FINAL: ACOSTADO DE LADO
 			else
 			{
-				elefantePos.z = -5.0f;
-				elefanteTrompa = 0.0f;
-				elefanteLegFL = elefanteLegFR = elefanteLegBL = elefanteLegBR = 0.0f;
-				rotElefante = 0.0f;
+				elefantePos.x = -6.0f;
+				elefantePos.z = -10.5f;  //  CAMBIADO: Posición final cerca de la pared
+				elefantePos.y = 0.0f;
+				rotElefanteLado = 90.0f;
+
+				// Patas
+				elefanteLegFL = 0.0f;
+				elefanteLegFR = 0.0f;
+				elefanteLegBL = 0.0f;
+				elefanteLegBR = 0.0f;
+
+				// Respiración solo trompa
+				elefanteTrompa = sin(glfwGetTime() * 0.5f) * 2.0f;
+				rotElefante = 90.0f;
 			}
 		}
 
 
 
 		// ---------------------------------------------------------------------------------
-		// 							DIBUJO DE MODELOS DESIERTO (-x,z)
-		// ---------------------------------------------------------------------------------
+	// 							DIBUJO DE MODELOS DESIERTO (-x,z)
+	// ---------------------------------------------------------------------------------
 
-		// **** DIBUJO DEL PISO DESIERTO  Y COMPONENTES ****
+	// **** DIBUJO DEL PISO DESIERTO  Y COMPONENTES ****
 
 		DibujarPiso(pisoArenaTextureID, glm::vec3(-7.25f, -0.49f, 7.25f), glm::vec3(10.5f, 0.1f, 10.5f), VAO_Cubo, modelLoc);
-		
+
 		//  ************ Codigo comentado para no cargar todo desde el inicio se descomenta al final *******
 
 		//// --- OASIS ---
@@ -1219,7 +1256,20 @@ int main()
 		//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		//CamelLeg_BR.Draw(lightingShader);
 
+
+
 		////CONDOR
+
+		//if (animarCondor)
+		//{
+		//	float t = glfwGetTime();
+		//	condorAlaIzq = sin(t * 10.0f) * 1.5f;
+		//	condorAlaDer = -condorAlaIzq;
+		//	condorHead = sin(t * 8.0f) * 1.0f;
+		//	condorPos.y = 0.7f + sin(t * 0.8f) * 0.15f;
+		//}
+
+
 		//model = glm::mat4(1);
 		//model = glm::translate(model, condorPos);
 		//model = glm::rotate(model, glm::radians(rotCondor), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -1253,6 +1303,46 @@ int main()
 		//CondorAla_Der.Draw(lightingShader);
 
 		////TORTUGA
+		//if (animarTortuga)
+		//{
+		//	float t = glfwGetTime() - startTimeTortuga; // tiempo de animación
+
+		//	//FASE 1: Camina hacia el agua
+		//	if (t < 2.5f)
+		//	{
+		//		tortugaPos.x = -7.8f - (t * 0.08f);
+		//		tortugaPos.y = -0.18f;
+		//		rotTortuga = 0.0f;
+		//		tortugaScale = 0.20f;
+		//	}
+		//	//FASE 2: Empieza a sumergirse
+		//	else if (t < 6.0f)
+		//	{
+		//		float t2 = t - 2.5f;
+		//		tortugaPos.x = -8.0f - (t2 * 0.4f);    // avanza en el agua 
+		//		tortugaPos.y = -0.18f - (t2 * 0.07f);  // baja más suave
+		//		tortugaScale = 0.20f - (t2 * 0.012f);  // se achica 
+		//		rotTortuga = sin(t2 * 0.5f) * 5.0f;
+		//	}
+		//	//FASE 3: Sale del agua
+		//	else if (t < 9.0f)
+		//	{
+		//		float t3 = t - 6.0f;
+		//		tortugaPos.x = -9.4f - (t3 * 0.7f);              // sale del agua
+		//		tortugaPos.y = -0.425f + (t3 * 0.0483f);
+		//		tortugaScale = 0.19f + (t3 * 0.0033f);
+		//		rotTortuga = t3 * 60.0f;                         // empieza a girar 
+		//	}
+		//	//FASE FINAL: gira
+		//	else
+		//	{
+		//		tortugaPos.x = -11.5f;
+		//		tortugaPos.y = -0.28f;
+		//		tortugaScale = 0.20f;
+		//		rotTortuga = 180.0f;
+		//	}
+		//}
+
 		//model = glm::mat4(1);
 		//model = glm::translate(model, tortugaPos);
 		//model = glm::rotate(model, glm::radians(rotTortuga), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -1423,6 +1513,35 @@ void DoMovement()
 	else
 	{
 		teclaC_presionada = false;
+	}
+
+	//CONDOR
+	if (keys[GLFW_KEY_Z])
+	{
+		if (!teclaZ_presionada)
+		{
+			animarCondor = !animarCondor;
+			teclaZ_presionada = true;
+		}
+	}
+	else
+	{
+		teclaZ_presionada = false;
+	}
+
+	//TORTUGA
+	if (keys[GLFW_KEY_X])
+	{
+		if (!teclaX_presionada) // solo la primera vez que se presiona
+		{
+			animarTortuga = !animarTortuga;       
+			startTimeTortuga = glfwGetTime();     // reinicia animación
+			teclaX_presionada = true;             // evita repeticiones
+		}
+	}
+	else
+	{
+		teclaX_presionada = false; // se suelta la tecla
 	}
 	
 	//CAPIBARA
