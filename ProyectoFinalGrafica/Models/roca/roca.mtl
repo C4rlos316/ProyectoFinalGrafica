@@ -1,0 +1,13 @@
+# Blender 4.5.2 LTS MTL File: 'AcaciaTreeProject.blend'
+# www.blender.org
+
+newmtl sfrsrrewhoihio43hoi43hiohi43
+Ka 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd stone_01_albedo.jpg
+map_Ks stone_01_Specular.jpg
+map_Ns stone_01_Roughness.jpg
+map_Bump -bm 1.000000 Stone_01_normal.jpg
