@@ -71,6 +71,26 @@ glm::vec3 pointLightPositions[] = {
 // =================================================================================
 
 // -----------------------------------------
+//  ACUARIO
+// -----------------------------------------
+float rotAletaIzqPingu = 0.0f;
+float rotAletaDerPingu = 0.0f;
+float rotPataIzqPingu = 0.0f;
+float rotPataDerPingu = 0.0f;
+float rotCuerpoPingu = 0.0f;
+
+// --- ¡MODIFICADO! ---
+// 'pinguBasePos' es el centro de la roca. 'pinguPos' se actualizará en el loop.
+glm::vec3 pinguBasePos = glm::vec3(7.25f, 0.5f, -9.8f); // El centro de la roca
+glm::vec3 pinguPos = pinguBasePos; // La posición actual, se animará
+float pinguWalkDist = 0.5f; // Caminará 0.5 unidades hacia adelante y 0.5 hacia atrás
+// --- FIN MODIFICADO ---
+
+float pinguRotY = 0.0f; // Para la rotación del pingüino
+float pinguScale = 0.4f; // <-- ¡AJUSTA ESTA ESCALA!
+
+
+// -----------------------------------------
 //  DESIERTO
 // -----------------------------------------
 
@@ -92,11 +112,18 @@ float startTimeCamello = 0.0f;
 bool teclaC_presionada = false;
 
 
+// -----------------------------------------
+//  AVE (Cuadrante Central)
+// -----------------------------------------
+float rotAlaIzq = 0.0f;
+float rotAlaDer = 0.0f;
+float rotCabeza = 0.0f;
+glm::vec3 avePos = glm::vec3(0.0f, 1.0f, 0.0f); // Posición del ave en el centro
 
 
 // Vértices del cubo
 float vertices[] = {
-	// Posiciones           // Normales           // Coordenadas de Textura (U, V)
+	// Posiciones         // Normales          // Coordenadas de Textura (U, V)
 	// Cara Trasera (-Z)
 	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
 	 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
@@ -162,7 +189,7 @@ void pataDraw(glm::mat4 modelo, glm::vec3 escala, glm::vec3 traslado, GLint unif
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texturaID);
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, texturaID); 
+	glBindTexture(GL_TEXTURE_2D, texturaID);
 
 	// 3. Enlazar el VAO del cubo
 	glBindVertexArray(VAO);
@@ -240,8 +267,18 @@ int main()
 	// =================================================================================
 	// 						CARGA DE MODELOS - Acuario (X,-Z)
 	// =================================================================================
+	// (Asegúrate de que la ruta 'Models/Acuario/escenarioAcuario.obj' sea correcta)
+	Model EscenarioAcuario((char*)"Models/Acuario/escenarioacuario.obj");
 
-
+	// --- Cargar Pinguino ---
+	// (Asegúrate de crear la carpeta 'Models/Acuario/Pinguino/' y poner los .obj ahí)
+	Model PinguCuerpo((char*)"Models/Acuario/cuerpopinguno.obj");
+	Model PinguPataDer((char*)"Models/Acuario/pataderechapingu.obj");
+	Model PinguPataIzq((char*)"Models/Acuario/pataizquierdapingu.obj");
+	Model PinguAletaDer((char*)"Models/Acuario/aletaderechapingu.obj");
+	Model PinguAletaIzq((char*)"Models/Acuario/aletaizquierdapingu.obj");
+	// IGLU
+	Model IgluModel((char*)"Models/Acuario/IGLU.obj");
 
 	// =================================================================================
 	// 						CARGA DE MODELOS - Selva (X,Z)
@@ -255,7 +292,7 @@ int main()
 	// =================================================================================
 	std::cout << "Cargando modelos..." << std::endl;
 
-		// ====== CAMELLO ======
+	// ====== CAMELLO ======
 	Model CamelBody((char*)"Models/camello/CamelBody.obj");
 	Model CamelHead((char*)"Models/camello/CamelCabeza.obj");
 	Model CamelLeg_FL((char*)"Models/camello/CamelPataizqEnfr.obj");
@@ -264,6 +301,22 @@ int main()
 	Model CamelLeg_BR((char*)"Models/camello/CamelPataAtrasDer.obj");
 
 	std::cout << "Modelos cargados!" << std::endl;
+
+
+	// =================================================================================
+	// 						CARGA DE MODELOS - AVIARIO (CENTRO)
+	// =================================================================================
+
+	Model AviarioMadera((char*)"Models/Aviario/Aviariobase.obj");
+	Model AviarioVidrio((char*)"Models/Aviario/AviarioVidrio.obj");
+
+	// ---  Cargar aves ---
+	Model AveCuerpo((char*)"Models/Aviario/cuerpoave1.obj");
+	Model AveCabeza((char*)"Models/Aviario/cabezaave1.obj");
+	Model AveAlaIzq((char*)"Models/Aviario/alaizquierdaave1.obj");
+	Model AveAlaDer((char*)"Models/Aviario/aladerechaave1.obj");
+	Model AvePatas((char*)"Models/Aviario/patasave1.obj");
+	Model AveCola((char*)"Models/Aviario/colaave1.obj");
 
 
 	// =================================================================================
@@ -287,9 +340,15 @@ int main()
 	GLuint pisoEntradaID = TextureFromFile("images/pasto.jpg", ".");
 	ConfigurarTexturaRepetible(pisoEntradaID);
 
-	// *** TEXTURA PARA EL PISO ACUARIO ***
-	GLuint pisoAcuarioTextureID = TextureFromFile("images/acuario.jpg", ".");
-	ConfigurarTexturaRepetible(pisoAcuarioTextureID);
+	// *** TEXTURA PARA EL PISO ACUARIO (DIVIDIDO) ***
+
+	//
+	GLuint pisoPiedraTextureID = TextureFromFile("images/rocacafe.jpg", ".");
+	ConfigurarTexturaRepetible(pisoPiedraTextureID);
+
+	GLuint pisoAguaTextureID = TextureFromFile("images/agua2.jpg", ".");
+	ConfigurarTexturaRepetible(pisoAguaTextureID);
+
 
 	// *** TEXTURA PARA EL PISO SELVA ***
 	GLuint pisoSelvaTextureID = TextureFromFile("images/selva.jpg", ".");
@@ -414,7 +473,7 @@ int main()
 		// Use cooresponding shader when setting uniforms/drawing objects
 		lightingShader.Use();
 
-		glUniform1i(glGetUniformLocation(lightingShader.Program, "diffuse"), 0);
+		//glUniform1i(glGetUniformLocation(lightingShader.Program, "diffuse"), 0); // Esta línea estaba causando problemas
 		//glUniform1i(glGetUniformLocation(lightingShader.Program, "specular"),1);
 
 		GLint viewPosLoc = glGetUniformLocation(lightingShader.Program, "viewPos");
@@ -508,38 +567,7 @@ int main()
 		// 							CARGA DE TEXTURAS
 		// ---------------------------------------------------------------------------------
 
-		//GLuint texMadera, texMetal, texPlastico;
-		//int textureWidth, textureHeight, nrChannels;
-		//unsigned char* image;
-
-		//// Función lambda para cargar texturas
-		//auto cargarTextura = [&](const char* path, GLuint& tex) {
-		//	glGenTextures(1, &tex);
-		//	glBindTexture(GL_TEXTURE_2D, tex);
-		//	stbi_set_flip_vertically_on_load(true);
-		//	image = stbi_load(path, &textureWidth, &textureHeight, &nrChannels, 0);
-		//	if (image)
-		//	{
-		//		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-		//		glGenerateMipmap(GL_TEXTURE_2D);
-		//	}
-		//	else
-		//	{
-		//		std::cout << "Failed to load texture: " << path << std::endl;
-		//	}
-		//	stbi_image_free(image);
-
-		//	// Parámetros de textura
-		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		//	};
-
-		//// Cargar las tres texturas
-		//cargarTextura("images/madera.jpg", texMadera);
-		//cargarTextura("images/madera.jpg", texMetal);
-		//cargarTextura("images/madera.jpg", texPlastico);
+		//... (código de texturas comentado) ...
 
 
 		// ---------------------------------------------------------------------------------
@@ -547,7 +575,7 @@ int main()
 		// ---------------------------------------------------------------------------------
 
 		// DIBUJO DEL PISO GENERAL LADRILLO
-			
+
 		lightingShader.Use();
 		DibujarPiso(pisoTextureID, glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(25.0f, 0.1f, 25.0f), VAO_Cubo, modelLoc);
 
@@ -561,13 +589,41 @@ int main()
 		// 							DIBUJO DE ESCENARIO ACUARIO (x,-z)
 		// ---------------------------------------------------------------------------------
 
+		// --- ¡MODIFICADO! ---
 		// **** DIBUJOS DEL PISO Y ACCESORIOS DE ACUARIO ****
-		DibujarPiso(pisoAcuarioTextureID, glm::vec3(7.25f, -0.49f, -7.25f), glm::vec3(10.5f, 0.1f, 10.5f), VAO_Cubo, modelLoc);
+		// El cuadrante total es: centro(7.25f, -0.49f, -7.25f), escala(10.5f, 0.1f, 10.5f)
+
+		// 1. Mitad trasera (Piedra)
+		// Escalamos el piso a la mitad de profundidad (5.25f)
+		// y lo movemos 1/4 hacia atrás (centro Z = -9.875f)
+		DibujarPiso(pisoPiedraTextureID, glm::vec3(7.25f, -0.49f, -9.875f), glm::vec3(10.5f, 0.1f, 5.25f), VAO_Cubo, modelLoc);
+
+		// 2. Mitad delantera (Agua)
+		// Escalamos el piso a la mitad de profundidad (5.25f)
+		// y lo movemos 1/4 hacia adelante (centro Z = -4.625f)
+		DibujarPiso(pisoAguaTextureID, glm::vec3(7.25f, -0.49f, -4.625f), glm::vec3(10.5f, 0.1f, 5.25f), VAO_Cubo, modelLoc);
 
 
+		// ---  DIBUJAR EL FONDO DEL ACUARIO ---
+		model = glm::mat4(1.0f);
+		// El centro X del cuadrante es 7.25f
+		// El fondo Z del cuadrante es -7.25f - (10.5f / 2) = -12.5f
+		model = glm::translate(model, glm::vec3(5.25f, -0.5f, -12.5f)); // <-- Corregí el X de 5.25 a 7.25
+		model = glm::scale(model, glm::vec3(2.2f, 2.0f, 1.5f)); // <-- ¡AJUSTA ESTA ESCALA!
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-		// **** DIBUJO DE ANIMALES ACUARIO ****
+		EscenarioAcuario.Draw(lightingShader);
+	
+		// --- DIBUJO IGLU ---
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(11.2f, -0.4f, -9.0f));
+		model = glm::rotate(model, glm::radians(220.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.7f, 0.7f, 0.7f));  
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		IgluModel.Draw(lightingShader);
 
+
+	
 
 
 
@@ -654,7 +710,7 @@ int main()
 				rotCamel = 180.0f;
 			}
 
-			
+
 			else
 			{
 				camelPos.z = 5.0f;
@@ -714,6 +770,266 @@ int main()
 		model = glm::translate(model, -camelPivotBR);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		CamelLeg_BR.Draw(lightingShader);
+
+
+
+		// =================================================================================
+		// 							ANIMACIÓN DE ANIMALES - AVIARIO (CENTRO)
+		// =================================================================================
+
+		// Hacemos que el ave aletee y mueva la cabeza
+		float t_aves = glfwGetTime();
+
+		// Aleteo (de -1 a 1 y de vuelta)
+		float aleteo = sin(t_aves * 6.0f); // 6.0 = aleteo rápido
+		rotAlaIzq = aleteo * 45.0f; // Sube y baja 45 grados
+		rotAlaDer = -aleteo * 45.0f; // Sube y baja 45 grados (opuesto)
+
+		// Movimiento de cabeza (más lento)
+		rotCabeza = sin(t_aves * 1.5f) * 15.0f; // Gira 15 grados a los lados
+
+
+		// --- ¡MODIFICADO! ---
+		// =================================================================================
+		// 							ANIMACIÓN DE ANIMALES - ACUARIO (PINGUINO)
+		// =================================================================================
+
+		// 1. Definir el ciclo
+		float cycleDuration = 10.0f; // 10 segundos en total
+		float walkDuration = 4.0f;   // 4 seg para caminar
+		float turnDuration = 1.0f;   // 1 seg para girar
+
+		// fmod nos da un tiempo que se repite de 0.0 a 10.0
+		float t_pingu = fmod(glfwGetTime(), cycleDuration);
+
+		// 2. Definir las fases del ciclo
+		float turn1StartTime = walkDuration; // 4.0s
+		float walkBackStartTime = turn1StartTime + turnDuration; // 5.0s
+		float turn2StartTime = walkBackStartTime + walkDuration; // 9.0s
+
+		// --- ¡MODIFICADO! ---
+		// 3. Definir las posiciones de inicio y fin (AHORA CAMINANDO EN EJE X)
+		// Camina desde 'pinguBasePos.x - pinguWalkDist' hasta 'pinguBasePos.x + pinguWalkDist'
+		glm::vec3 pinguStartPos = glm::vec3(pinguBasePos.x - pinguWalkDist, pinguBasePos.y, pinguBasePos.z);
+		glm::vec3 pinguEndPos = glm::vec3(pinguBasePos.x + pinguWalkDist, pinguBasePos.y, pinguBasePos.z);
+		// --- FIN MODIFICADO ---
+
+		// 4. Lógica de Estado
+		if (t_pingu < turn1StartTime) // Fase 1: Caminar Adelante (0s a 4s)
+		{
+			// Interpolar la posición
+			float t_interp = t_pingu / walkDuration; // 0.0 a 1.0
+			pinguPos = glm::mix(pinguStartPos, pinguEndPos, t_interp);
+			pinguRotY = 90.0f; // --- ¡MODIFICADO! Mirando en dirección +X (flecha roja)
+
+			// Animar movimiento
+			float pasoPingu = sin(t_pingu * 8.0f); // Aleteo y patas (más rápido)
+			rotPataIzqPingu = pasoPingu * 20.0f;
+			rotPataDerPingu = -pasoPingu * 20.0f;
+			rotCuerpoPingu = pasoPingu * 5.0f; // Balanceo
+			rotAletaIzqPingu = abs(pasoPingu) * 25.0f;
+			rotAletaDerPingu = abs(pasoPingu) * 25.0f;
+		}
+		else if (t_pingu < walkBackStartTime) // Fase 2: Girar 180 (4s a 5s)
+		{
+			pinguPos = pinguEndPos; // Quedarse quieto en el punto final
+
+			// Interpolar la rotación
+			float t_interp = (t_pingu - turn1StartTime) / turnDuration; // 0.0 a 1.0
+			pinguRotY = 90.0f + (t_interp * 180.0f); // --- ¡MODIFICADO! Gira de 90 a 270
+
+			// Detener animación de extremidades
+			rotPataIzqPingu = 0.0f; rotPataDerPingu = 0.0f; rotCuerpoPingu = 0.0f; rotAletaIzqPingu = 0.0f; rotAletaDerPingu = 0.0f;
+		}
+		else if (t_pingu < turn2StartTime) // Fase 3: Caminar de Regreso (5s a 9s)
+		{
+			// Interpolar la posición (al revés)
+			float t_interp = (t_pingu - walkBackStartTime) / walkDuration; // 0.0 a 1.0
+			pinguPos = glm::mix(pinguEndPos, pinguStartPos, t_interp);
+			pinguRotY = 270.0f; // --- ¡MODIFICADO! Mirando en dirección -X
+
+			// Animar movimiento
+			float pasoPingu = sin(t_pingu * 8.0f); // Aleteo y patas
+			rotPataIzqPingu = pasoPingu * 20.0f;
+			rotPataDerPingu = -pasoPingu * 20.0f;
+			rotCuerpoPingu = pasoPingu * 5.0f; // Balanceo
+			rotAletaIzqPingu = abs(pasoPingu) * 25.0f;
+			rotAletaDerPingu = abs(pasoPingu) * 25.0f;
+		}
+		else // Fase 4: Girar de Regreso (9s a 10s)
+		{
+			pinguPos = pinguStartPos; // Quedarse quieto en el punto inicial
+
+			// Interpolar la rotación
+			float t_interp = (t_pingu - turn2StartTime) / turnDuration; // 0.0 a 1.0
+			pinguRotY = 270.0f + (t_interp * 180.0f); // --- ¡MODIFICADO! Gira de 270 a 450 (que es 90)
+
+			// Detener animación de extremidades
+			rotPataIzqPingu = 0.0f; rotPataDerPingu = 0.0f; rotCuerpoPingu = 0.0f; rotAletaIzqPingu = 0.0f; rotAletaDerPingu = 0.0f;
+		}
+
+
+		// =================================================================================
+		// 							DIBUJO DE MODELOS - AVIARIO (CENTRO)
+		// =================================================================================
+
+		// --- ¡MODIFICADO! ---
+		// Esta es la forma correcta de manejar modelos con partes opacas y transparentes.
+
+		// --- 1. DIBUJAR LA PARTE OPACA (Madera) ---
+		// No necesita GL_BLEND. Usa 'transparency = 0' (que es el valor por defecto
+		// después de que lo reseteamos al final del bucle).
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
+		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+		AviarioMadera.Draw(lightingShader); // <-- Dibuja solo la madera
+
+
+		// --- 2. DIBUJAR LA PARTE TRANSPARENTE (Vidrio) ---
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		// "Encendemos" el interruptor 'transparency' en el shader
+		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 1);
+
+		// Volvemos a aplicar la misma transformación para el vidrio
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
+		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+		AviarioVidrio.Draw(lightingShader); // <-- Dibuja solo el vidrio
+
+
+		// --- DIBUJAR EL AVE ---
+		// (La dibujamos aquí para que esté dentro del vidrio transparente)
+
+		// ¡IMPORTANTE! Tus texturas de ave NO son transparentes.
+		// Le decimos al shader que las dibuje OPACAS (transparency = 0)
+		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 0);
+
+		// Cuerpo: Esta es la matriz "padre"
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, avePos);
+		model = glm::scale(model, glm::vec3(0.5f)); // <-- AJUSTA EL TAMAÑO
+		modelTemp = model; // Guardamos la matriz del cuerpo
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		AveCuerpo.Draw(lightingShader);
+
+		// Cabeza
+		// --- ¡DEBES ENCONTRAR ESTE PIVOTE! ---
+		glm::vec3 pivoteCabeza(0.0f, 0.5f, 0.1f); // (X,Y,Z) desde el centro del cuerpo (INVENTADO)
+		model = modelTemp;
+		model = glm::translate(model, pivoteCabeza);
+		model = glm::rotate(model, glm::radians(rotCabeza), glm::vec3(0.0f, 1.0f, 0.0f)); // Rota en Y
+		model = glm::translate(model, -pivoteCabeza);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		AveCabeza.Draw(lightingShader);
+
+		// Ala Izquierda
+		// --- ¡DEBES ENCONTRAR ESTE PIVOTE! ---
+		glm::vec3 pivoteAlaIzq(0.3f, 0.3f, 0.0f); // (X,Y,Z) desde el centro del cuerpo (INVENTADO)
+		model = modelTemp;
+		model = glm::translate(model, pivoteAlaIzq);
+		model = glm::rotate(model, glm::radians(rotAlaIzq), glm::vec3(0.0f, 0.0f, 1.0f)); // Rota en Z (aleteo)
+		model = glm::translate(model, -pivoteAlaIzq);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		AveAlaIzq.Draw(lightingShader);
+
+		// Ala Derecha
+		// --- ¡DEBES ENCONTRAR ESTE PIVOTE! ---
+		glm::vec3 pivoteAlaDer(-0.3f, 0.3f, 0.0f); // (X,Y,Z) desde el centro del cuerpo (INVENTADO)
+		model = modelTemp;
+		model = glm::translate(model, pivoteAlaDer);
+		model = glm::rotate(model, glm::radians(rotAlaDer), glm::vec3(0.0f, 0.0f, 1.0f)); // Rota en Z
+		model = glm::translate(model, -pivoteAlaDer);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		AveAlaDer.Draw(lightingShader);
+
+		// Cola
+		// --- ¡DEBES ENCONTRAR ESTE PIVOTE! ---
+		glm::vec3 pivoteCola(0.0f, 0.1f, -0.4f); // (INVENTADO)
+		model = modelTemp;
+		model = glm::translate(model, pivoteCola);
+		// (No hay rotación para la cola en este ejemplo, pero aquí iría)
+		model = glm::translate(model, -pivoteCola);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		AveCola.Draw(lightingShader);
+
+		// Patas
+		// --- ¡DEBES ENCONTRAR ESTE PIVOTE! ---
+		glm::vec3 pivotePatas(0.0f, -0.2f, 0.0f); // (INVENTADO)
+		model = modelTemp;
+		model = glm::translate(model, pivotePatas);
+		// (No hay rotación para las patas)
+		model = glm::translate(model, -pivotePatas);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		AvePatas.Draw(lightingShader);
+
+
+		// Desactivamos todo para el resto de la escena
+		glDisable(GL_BLEND);
+		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 0);
+
+
+		// --- DIBUJAR PINGUINO ---
+
+		// Cuerpo
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, pinguPos); // Posición global del pinguino
+		model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));// Rotación global en Y
+		model = glm::rotate(model, glm::radians(pinguRotY), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(pinguScale)); // Escala global
+		modelTemp = model; // Guardamos matriz del cuerpo
+
+		// Aplicar balanceo del cuerpo
+		model = glm::translate(model, glm::vec3(0.0f, 0.5f, 0.0f)); // Mover origen al centro del cuerpo (aprox)
+		model = glm::rotate(model, glm::radians(rotCuerpoPingu), glm::vec3(0.0f, 0.0f, 1.0f)); // Rotar en Z
+		model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f)); // Volver a la posición original
+
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		PinguCuerpo.Draw(lightingShader);
+
+		// Aleta Izquierda
+		glm::vec3 pivoteAletaIzq(0.18f, 0.5f, 0.0f); // AJUSTADO A MANO
+		model = modelTemp; // Usa la matriz base sin el balanceo del cuerpo para los apéndices
+		model = glm::translate(model, pivoteAletaIzq);
+		model = glm::rotate(model, glm::radians(rotAletaIzqPingu), glm::vec3(1.0f, 0.0f, 0.0f)); // Rota en X
+		model = glm::translate(model, -pivoteAletaIzq);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		PinguAletaIzq.Draw(lightingShader);
+
+		// Aleta Derecha
+		glm::vec3 pivoteAletaDer(-0.18f, 0.5f, 0.0f); // AJUSTADO A MANO
+		model = modelTemp; // Usa la matriz base sin el balanceo del cuerpo para los apéndices
+		model = glm::translate(model, pivoteAletaDer);
+		model = glm::rotate(model, glm::radians(rotAletaDerPingu), glm::vec3(1.0f, 0.0f, 0.0f)); // Rota en X
+		model = glm::translate(model, -pivoteAletaDer);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		PinguAletaDer.Draw(lightingShader);
+
+		// Pata Izquierda
+		glm::vec3 pivotePataIzq(0.06f, -0.4f, 0.02f); // AJUSTADO A MANO
+		model = modelTemp; // Usa la matriz base sin el balanceo del cuerpo para los apéndices
+		model = glm::translate(model, pivotePataIzq);
+		model = glm::rotate(model, glm::radians(rotPataIzqPingu), glm::vec3(1.0f, 0.0f, 0.0f)); // Rota en X
+		model = glm::translate(model, -pivotePataIzq);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		PinguPataIzq.Draw(lightingShader);
+
+		// Pata Derecha
+		glm::vec3 pivotePataDer(-0.06f, -0.4f, 0.02f); // AJUSTADO A MANO
+		model = modelTemp; // Usa la matriz base sin el balanceo del cuerpo para los apéndices
+		model = glm::translate(model, pivotePataDer);
+		model = glm::rotate(model, glm::radians(rotPataDerPingu), glm::vec3(1.0f, 0.0f, 0.0f)); // Rota en X
+		model = glm::translate(model, -pivotePataDer);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		PinguPataDer.Draw(lightingShader);
+
 
 		//CONDOR
 
@@ -885,7 +1201,7 @@ void MouseCallback(GLFWwindow* window, double xPos, double yPos)
 	}
 
 	GLfloat xOffset = xPos - lastX;
-	GLfloat yOffset = lastY - yPos; 
+	GLfloat yOffset = lastY - yPos;
 
 	lastX = xPos;
 	lastY = yPos;
