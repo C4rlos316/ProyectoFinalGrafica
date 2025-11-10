@@ -277,10 +277,7 @@ float verticesPared[] = {
 	 -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,   0.0f, 5.0f
 };
 glm::vec3 Light1 = glm::vec3(0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texturaID);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, texturaID);
+
 
 // Deltatime
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
