@@ -1,0 +1,14 @@
+# Blender 4.5.2 LTS MTL File: 'ave.blend'
+# www.blender.org
+
+newmtl tripo_mat_ac281bdb-beb3-4874-8516-6b0663c6e441
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd tripo_image_ac281bdb-beb3-4874-8516-6b0663c6e441_0.jpg
+map_Ns tripo_image_ac281bdb-beb3-4874-8516-6b0663c6e441_Roughness.jpg
+map_refl tripo_image_ac281bdb-beb3-4874-8516-6b0663c6e441_Metallic.jpg
+map_Bump -bm 1.000000 tripo_image_ac281bdb-beb3-4874-8516-6b0663c6e441_2.jpg
