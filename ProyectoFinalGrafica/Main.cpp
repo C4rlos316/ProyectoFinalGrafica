@@ -119,6 +119,19 @@ bool animarElefante = false;
 float startTimeElefante = 0.0f;
 bool teclaV_presionada = false;
 
+// JIRAFA (Cuadrante -X, -Z)
+float jirafaScale = 0.35f;
+float rotJirafa = 0.0f;
+float jirafaCabezaRot = 0.0f;
+float jirafaColaRot = 0.0f;
+float jirafaPataDelDer = 0.0f;
+float jirafaPataDelIzq = 0.0f;
+float jirafaPataTrasDer = 0.0f;
+float jirafaPataTrasIzq = 0.0f;
+glm::vec3 jirafaPos = glm::vec3(-10.0f, 0.7f, -10.0f);
+bool animarJirafa = false;
+float startTimeJirafa = 0.0f;
+bool teclaJ_presionada = false;
 
 // -----------------------------------------
 //  DESIERTO (-X,Z)
@@ -493,6 +506,13 @@ int main()
 	
 	//JIRAFA
 
+	Model Jirafa_Cabeza((char*)"Models/jirafa/cabezaJirafa.obj");
+	Model Jirafa_Cola((char*)"Models/jirafa/colaJirafa.obj");
+	Model Jirafa_Cuerpo((char*)"Models/jirafa/cuerpoJirafa.obj");
+	Model Jirafa_PataDelDer((char*)"Models/jirafa/pataDelDerJirafa.obj");
+	Model Jirafa_PataDelIzq((char*)"Models/jirafa/pataDelIzqJirafa.obj");
+	Model Jirafa_PataTrasDer((char*)"Models/jirafa/pataTrasDerJirafa.obj");
+	Model Jirafa_PataTrasIzq((char*)"Models/jirafa/pataTrasIzqJirafa.obj");
 
 	//
 
@@ -1290,7 +1310,127 @@ int main()
 			}
 		}
 
+		// **** DIBUJO DE LA JIRAFA ****
+		model = glm::mat4(1);
+		model = glm::translate(model, jirafaPos);
+		model = glm::rotate(model, glm::radians(rotJirafa), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(jirafaScale));
+		modelTemp = model;
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Jirafa_Cuerpo.Draw(lightingShader);
 
+		// Cabeza
+		glm::vec3 jirafaPivotCabeza(0.0f, 1.5f, 0.3f);
+		model = modelTemp;
+		model = glm::translate(model, jirafaPivotCabeza);
+		model = glm::rotate(model, glm::radians(jirafaCabezaRot), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -jirafaPivotCabeza);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Jirafa_Cabeza.Draw(lightingShader);
+
+		// Cola
+		glm::vec3 jirafaPivotCola(0.0f, 0.8f, -0.5f);
+		model = modelTemp;
+		model = glm::translate(model, jirafaPivotCola);
+		model = glm::rotate(model, glm::radians(jirafaColaRot), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -jirafaPivotCola);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Jirafa_Cola.Draw(lightingShader);
+
+		// Pata delantera derecha
+		glm::vec3 jirafaPivotPataDelDer(0.3f, 0.8f, 0.4f);
+		model = modelTemp;
+		model = glm::translate(model, jirafaPivotPataDelDer);
+		model = glm::rotate(model, glm::radians(jirafaPataDelDer), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -jirafaPivotPataDelDer);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Jirafa_PataDelDer.Draw(lightingShader);
+
+		// Pata delantera izquierda
+		glm::vec3 jirafaPivotPataDelIzq(-0.3f, 0.8f, 0.4f);
+		model = modelTemp;
+		model = glm::translate(model, jirafaPivotPataDelIzq);
+		model = glm::rotate(model, glm::radians(jirafaPataDelIzq), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -jirafaPivotPataDelIzq);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Jirafa_PataDelIzq.Draw(lightingShader);
+
+		// Pata trasera derecha
+		glm::vec3 jirafaPivotPataTrasDer(0.3f, 0.8f, -0.4f);
+		model = modelTemp;
+		model = glm::translate(model, jirafaPivotPataTrasDer);
+		model = glm::rotate(model, glm::radians(jirafaPataTrasDer), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -jirafaPivotPataTrasDer);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Jirafa_PataTrasDer.Draw(lightingShader);
+
+		// Pata trasera izquierda
+		glm::vec3 jirafaPivotPataTrasIzq(-0.3f, 0.8f, -0.4f);
+		model = modelTemp;
+		model = glm::translate(model, jirafaPivotPataTrasIzq);
+		model = glm::rotate(model, glm::radians(jirafaPataTrasIzq), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -jirafaPivotPataTrasIzq);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Jirafa_PataTrasIzq.Draw(lightingShader);
+
+		// JIRAFA - ANIMACIÓN
+		if (animarJirafa)
+		{
+			float t = glfwGetTime() - startTimeJirafa;
+
+			// FASE 1: Caminando (4 segundos)
+			if (t < 4.0f)
+			{
+				// Avanza 4 unidades en Z
+				float totalDist = 4.0f;
+				jirafaPos.z = -10.0f + (t * (totalDist / 4.0f));
+
+				// Ciclo de caminata (patas se mueven por pares)
+				float paso = sin(t * 5.5f);
+				jirafaPataDelDer = paso * 2.5f;
+				jirafaPataTrasDer = paso * 2.5f;
+				jirafaPataDelIzq = -paso * 2.5f;
+				jirafaPataTrasIzq = -paso * 2.5f;
+
+				// Cabeza se balancea suavemente
+				jirafaCabezaRot = sin(t * 0.5f) * 2.0f;
+
+				// Cola se mueve al caminar
+				jirafaColaRot = sin(t * 1.5f) * 5.0f;
+
+				rotJirafa = 0.0f;
+			}
+			// FASE 2: Comiendo hojas (4 segundos)
+			else if (t < 8.0f)
+			{
+				float t2 = t - 4.0f;
+				jirafaPos.z = -6.0f;
+
+				// Patas se detienen gradualmente
+				jirafaPataDelDer = sin(t2 * 0.5f) * 0.5f;
+				jirafaPataDelIzq = -jirafaPataDelDer;
+				jirafaPataTrasDer = -jirafaPataDelDer;
+				jirafaPataTrasIzq = jirafaPataDelDer;
+
+				// Cabeza baja para comer
+				jirafaCabezaRot = sin(t2 * 1.0f) * 3.0f;
+
+				// Cola se mueve suavemente
+				jirafaColaRot = sin(t2 * 0.8f) * 2.0f;
+
+				rotJirafa = 0.0f;
+			}
+			// FASE 3: Quieta
+			else
+			{
+				jirafaPos.z = -6.0f;
+				jirafaCabezaRot = 0.0f;
+				jirafaColaRot = 0.0f;
+				jirafaPataDelDer = jirafaPataDelIzq = 0.0f;
+				jirafaPataTrasDer = jirafaPataTrasIzq = 0.0f;
+				rotJirafa = 0.0f;
+			}
+		}
 
 		// ---------------------------------------------------------------------------------
 		// 							DIBUJO DE MODELOS DESIERTO (-x,z)
@@ -1629,6 +1769,21 @@ void DoMovement()
 	else
 	{
 		teclaV_presionada = false;
+	}
+
+	//JIRAFA
+	if (keys[GLFW_KEY_J])
+	{
+		if (!teclaJ_presionada)
+		{
+			animarJirafa = !animarJirafa;
+			startTimeJirafa = glfwGetTime();
+			teclaJ_presionada = true;
+		}
+	}
+	else
+	{
+		teclaJ_presionada = false;
 	}
 
 	//CAMELLO
