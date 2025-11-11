@@ -469,7 +469,10 @@ int main()
 	Model AveAlaDer((char*)"Models/Aviario/aladerechaave1.obj");
 	Model AvePatas((char*)"Models/Aviario/patasave1.obj");
 	Model AveCola((char*)"Models/Aviario/colaave1.obj");
-
+	// =================================================================================
+	// 						CARGA DE MODELOS - ENTRADA // ADORNOS
+	// =================================================================================
+	Model LetreroZoo((char*)"Models/adornos/zooletre.obj");
 
 	// =================================================================================
 	// 						CARGA DE MODELOS - Sabana (-X,-Z)
@@ -681,6 +684,19 @@ int main()
 
 		// DIBUJO DEL PASTO ENTRADA
 		DibujarPiso(pisoEntradaID, glm::vec3(0.0f, -0.5f, 17.5f), glm::vec3(25.0f, 0.1f, 10.0f), VAO_Cubo, modelLoc);
+
+		// =================================================================================
+		// 							DIBUJO DE MODELOS - ENTRADA
+		// =================================================================================
+		model = glm::mat4(1.0f);
+		// Posición (0, Y, Z) para centrarlo en la entrada
+		// Lo pongo en Z=12.0f (justo donde termina el pasto y empieza el ladrillo)
+		model = glm::translate(model, glm::vec3(0.0f, -0.5f, 12.0f));
+		model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Rotar 180 para que mire a la cámara
+		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f)); // <-- AJUSTA LA ESCALA
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+		LetreroZoo.Draw(lightingShader);
 
 		//Dibujo de las paredes 
 		
