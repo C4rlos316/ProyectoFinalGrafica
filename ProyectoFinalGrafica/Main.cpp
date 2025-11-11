@@ -69,16 +69,63 @@ float rotPataIzqPingu = 0.0f;
 float rotPataDerPingu = 0.0f;
 float rotCuerpoPingu = 0.0f;
 
-// --- ¡MODIFICADO! ---
-// 'pinguBasePos' es el centro de la roca. 'pinguPos' se actualizará en el loop.
+
 glm::vec3 pinguBasePos = glm::vec3(7.25f, 0.5f, -9.8f); // El centro de la roca
-glm::vec3 pinguPos = pinguBasePos; // La posición actual, se animará
+glm::vec3 pinguPos = pinguBasePos; 
 float pinguWalkDist = 0.5f; // Caminará 0.5 unidades hacia adelante y 0.5 hacia atrás
 // --- FIN MODIFICADO ---
 
-float pinguRotY = 0.0f; // Para la rotación del pingüino
-float pinguScale = 0.4f; // <-- ¡AJUSTA ESTA ESCALA!
+float pinguRotY = 0.0f; 
+float pinguScale = 0.4f; 
+// --- TORTUGA ACUARIO  ---
+float rotTortugaAcuarioHead = 0.0f;
+float rotTortugaAcuarioFL = 0.0f;
+float rotTortugaAcuarioFR = 0.0f;
+float rotTortugaAcuarioBL = 0.0f;
+float rotTortugaAcuarioBR = 0.0f;
+float rotTortugaAcuarioCuerpo = 0.0f; 
 
+
+glm::vec3 tortugaBasePos = glm::vec3(7.25f, -0.45f, -4.625f); 
+glm::vec3 tortugaAcuarioPos = tortugaBasePos; 
+float tortugaSwimDist = 4.5f; 
+// --- FIN MODIFICADO ---
+float tortugaAcuarioRotY = 0.0f; // Rotación de la animación
+float tortugaAcuarioScale = 0.01f;
+bool animarTortugaAcuario = false;
+bool teclaT_presionada = false; //tecla 'T'
+float startTimeTortugaAcuario = 0.0f;
+// --- FIN NUEVO ---
+
+// ---  NUTRIA ACUARIO ---
+float rotNutriaHead = 0.0f;
+float rotNutriaCola = 0.0f;
+float rotNutriaFL = 0.0f;
+float rotNutriaFR = 0.0f;
+float rotNutriaBL = 0.0f;
+float rotNutriaBR = 0.0f;
+float rotNutriaCuerpoX = 0.0f; // Para el giro en el clavado
+float nutriaRotY = 0.0f; // Para la dirección
+// Posiciones de la animación (¡AJUSTA ESTAS COORDENADAS!)
+glm::vec3 nutriaPos1_Roca = glm::vec3(5.5f, 0.3f, -9.8f);   // Pos 1: Sobre la roca
+
+// --- ¡MODIFICADO! (Arreglo 2) ---
+// Sube el valor Y (segundo número) para que caiga ENCIMA del iglú, no adentro.
+glm::vec3 nutriaPos = glm::vec3(5.5f, 0.2f, -9.8f);   // Pos 1: Sobre la roca
+glm::vec3 nutriaPos2_Iglu = glm::vec3(11.2f, 1.0f, -9.0f);  // Pos 2: Sobre el iglú (Alto)
+
+// --- ¡MODIFICADO! (Arreglo 2: Clavado) ---
+// Bajamos la 'Y' final para que termine BAJO el agua
+glm::vec3 nutriaPos3_Agua = glm::vec3(10.5f, -1.0f, -6.5f); //
+float nutriaScale = 0.01f; // <-- ¡AJUSTA ESTA ESCALA!
+bool animarNutria = false;
+bool teclaN_presionada = false; // Usaremos la tecla 'N'
+float startTimeNutria = 0.0f;
+// --- FIN NUTRIA ---
+
+// -----------------------------------------
+//  DESIERTO
+// -----------------------------------------
 
 // -----------------------------------------
 //  DESIERTO
@@ -387,7 +434,7 @@ int main()
 	// =================================================================================
 	// 						CARGA DE MODELOS - Acuario (X,-Z)
 	// =================================================================================
-	// (Asegúrate de que la ruta 'Models/Acuario/escenarioAcuario.obj' sea correcta)
+
 
 	// =================================================================================
 	// 						CARGA DE MODELO - Personaje camara
@@ -405,7 +452,23 @@ int main()
 	Model PinguAletaIzq((char*)"Models/Acuario/aletaizquierdapingu.obj");
 	// IGLU
 	Model IgluModel((char*)"Models/Acuario/IGLU.obj");
-
+	// tortuga2Acuario
+	Model TortugaModel((char*)"Models/tortuga2/tortuga1.obj");
+	Model TortugaBody((char*)"Models/tortuga2/tortuga1cuerpo.obj");
+	Model TortugaPataFL((char*)"Models/tortuga2/tortuga1patadelanteraizquierda.obj");
+	Model TortugaPataFR((char*)"Models/tortuga2/tortuga1patadelanteraderecha.obj");
+	Model TortugaPataBL((char*)"Models/tortuga2/tortuga1patatraseraizquierda.obj");
+	Model TortugaPataBR((char*)"Models/tortuga2/tortuga1patatraseraderecha.obj");
+	// --- Cargar Nutria ---
+	
+	Model NutriaBody((char*)"Models/nutriaacuario/nutriabody.obj");
+	Model NutriaHead((char*)"Models/nutriaacuario/nutriahead.obj");
+	Model NutriaCola((char*)"Models/nutriaacuario/nutriacola.obj");
+	Model NutriaPataFL((char*)"Models/nutriaacuario/nutriapatadelanteraizquierda.obj");
+	Model NutriaPataFR((char*)"Models/nutriaacuario/nutriapatadelanteraderecha.obj");
+	Model NutriaPataBL((char*)"Models/nutriaacuario/nutriapatatraseraizquierda.obj");
+	Model NutriaPataBR((char*)"Models/nutriaacuario/nutriapatatraseraderecha.obj");
+	// --- FIN NUEVO ---
 	// =================================================================================
 	// 						CARGA DE MODELOS - Selva (X,Z)
 	// =================================================================================
@@ -526,7 +589,7 @@ int main()
 	// 						CARGA DE MODELOS - ENTRADA // ADORNOS
 	// =================================================================================
 	Model LetreroZoo((char*)"Models/adornos/zooletre.obj");
-
+	Model BancaModel((char*)"Models/adornos/banca.obj");
 	// =================================================================================
 	// 						CARGA DE MODELOS - Sabana (-X,-Z)
 	// =================================================================================
@@ -759,15 +822,45 @@ int main()
 		// 							DIBUJO DE MODELOS - ENTRADA
 		// =================================================================================
 		model = glm::mat4(1.0f);
-		// Posición (0, Y, Z) para centrarlo en la entrada
-		// Lo pongo en Z=12.0f (justo donde termina el pasto y empieza el ladrillo)
-		model = glm::translate(model, glm::vec3(0.0f, -0.5f, 12.0f));
-		model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Rotar 180 para que mire a la cámara
-		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f)); // <-- AJUSTA LA ESCALA
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		model = glm::translate(model, glm::vec3(4.1f, 2.8f, 8.8f));
+		model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); 
+		model = glm::scale(model, glm::vec3(0.8f, 0.8f, 0.8f));
 
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		LetreroZoo.Draw(lightingShader);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		LetreroZoo.Draw(lightingShader);
 
+		// =================================================================================
+		// 							DIBUJO DE MODELOS - BANCAS
+		// =================================================================================
+		// --- Banca 1 (Fondo) ---
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, -0.5f, -11.7f)); 
+		model = glm::rotate(model, glm::radians(270.0f), glm::vec3(0.0f, 1.0f, 0.0f)); 
+		model = glm::scale(model, glm::vec3(6.0f, 6.0f, 6.0f)); 
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		BancaModel.Draw(lightingShader);
+
+		// --- Banca 2 (Camino Izquierdoo) ---
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-11.5f, -0.5f, 0.0f)); 
+		model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); 
+		model = glm::scale(model, glm::vec3(6.0f, 6.0f, 6.0f)); 
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		BancaModel.Draw(lightingShader);
+
+		// --- Banca 3 (Camino Derechoo) ---
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(11.5f, -0.5f, 0.0f)); 
+		model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f)); 
+		model = glm::scale(model, glm::vec3(6.0f, 6.0f, 6.0f)); 
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		BancaModel.Draw(lightingShader);
+		// --- FIN DE BANCAS ---
+	
+		
 		//Dibujo de las paredes 
 		
 		// Pared trasera (Z negativa)
@@ -810,18 +903,17 @@ int main()
 		// 							DIBUJO DE ESCENARIO ACUARIO (x,-z)
 		// ---------------------------------------------------------------------------------
 
-		// --- ¡MODIFICADO! ---
+		
 		// **** DIBUJOS DEL PISO Y ACCESORIOS DE ACUARIO ****
 		// El cuadrante total es: centro(7.25f, -0.49f, -7.25f), escala(10.5f, 0.1f, 10.5f)
 
 		// 1. Mitad trasera (Piedra)
-		// Escalamos el piso a la mitad de profundidad (5.25f)
-		// y lo movemos 1/4 hacia atrás (centro Z = -9.875f)
+		
+		
 		DibujarPiso(pisoPiedraTextureID, glm::vec3(7.25f, -0.49f, -9.875f), glm::vec3(10.5f, 0.1f, 5.25f), VAO_Cubo, modelLoc);
 
 		// 2. Mitad delantera (Agua)
-		// Escalamos el piso a la mitad de profundidad (5.25f)
-		// y lo movemos 1/4 hacia adelante (centro Z = -4.625f)
+		
 		DibujarPiso(pisoAguaTextureID, glm::vec3(7.25f, -0.49f, -4.625f), glm::vec3(10.5f, 0.1f, 5.25f), VAO_Cubo, modelLoc);
 
 
@@ -829,12 +921,147 @@ int main()
 		model = glm::mat4(1.0f);
 		// El centro X del cuadrante es 7.25f
 		// El fondo Z del cuadrante es -7.25f - (10.5f / 2) = -12.5f
-		model = glm::translate(model, glm::vec3(5.25f, -0.5f, -12.5f)); // <-- Corregí el X de 5.25 a 7.25
-		model = glm::scale(model, glm::vec3(2.2f, 2.0f, 1.5f)); // <-- ¡AJUSTA ESTA ESCALA!
+		model = glm::translate(model, glm::vec3(5.25f, -0.5f, -12.5f)); 
+		model = glm::scale(model, glm::vec3(2.2f, 2.0f, 1.5f)); 
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
 		EscenarioAcuario.Draw(lightingShader);
-	
+		// --- DIBUJAR TORTUGA ACUARIO ---
+
+		// Shell (Cáscara/Cuerpo principal)
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, tortugaAcuarioPos); 
+		model = glm::rotate(model, glm::radians(tortugaAcuarioRotY), glm::vec3(0.0f, 1.0f, 0.0f)); 
+		model = glm::scale(model, glm::vec3(tortugaAcuarioScale));
+		modelTemp = model; 
+		model = glm::rotate(model, glm::radians(rotTortugaAcuarioCuerpo), glm::vec3(1.0f, 0.0f, 0.0f)); 
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model)); 
+		TortugaModel.Draw(lightingShader);
+
+		// Body (Cabeza y cuello)
+		glm::vec3 pivoteTortugaHead(0.0f, 0.1f, 0.2f); 
+		model = modelTemp;
+		model = glm::translate(model, pivoteTortugaHead);
+		model = glm::rotate(model, glm::radians(rotTortugaAcuarioHead), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::translate(model, -pivoteTortugaHead);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		TortugaBody.Draw(lightingShader);
+
+		// Pata Delantera Izquierda
+		
+		glm::vec3 pivoteTortugaFL(0.2f, 0.0f, 0.1f); 
+		model = modelTemp;
+		model = glm::translate(model, pivoteTortugaFL);
+		model = glm::rotate(model, glm::radians(rotTortugaAcuarioFL), glm::vec3(1.0f, 0.0f, 1.0f)); 
+		model = glm::translate(model, -pivoteTortugaFL);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		TortugaPataFL.Draw(lightingShader);
+
+		// Pata Delantera Derecha
+		
+		glm::vec3 pivoteTortugaFR(-0.2f, 0.0f, 0.1f); 
+		model = modelTemp;
+		model = glm::translate(model, pivoteTortugaFR);
+		model = glm::rotate(model, glm::radians(rotTortugaAcuarioFR), glm::vec3(1.0f, 0.0f, -1.0f)); 
+		model = glm::translate(model, -pivoteTortugaFR);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		TortugaPataFR.Draw(lightingShader);
+
+		// Pata Trasera Izquierda
+		
+		glm::vec3 pivoteTortugaBL(0.15f, 0.0f, -0.2f); 
+		model = modelTemp;
+		model = glm::translate(model, pivoteTortugaBL);
+		model = glm::rotate(model, glm::radians(rotTortugaAcuarioBL), glm::vec3(1.0f, 0.0f, 1.0f));
+		model = glm::translate(model, -pivoteTortugaBL);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		TortugaPataBL.Draw(lightingShader);
+
+		// Pata Trasera Derecha
+		
+		glm::vec3 pivoteTortugaBR(-0.15f, 0.0f, -0.2f); 
+		model = modelTemp;
+		model = glm::translate(model, pivoteTortugaBR);
+		model = glm::rotate(model, glm::radians(rotTortugaAcuarioBR), glm::vec3(1.0f, 0.0f, -1.0f));
+		model = glm::translate(model, -pivoteTortugaBR);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		TortugaPataBR.Draw(lightingShader);
+		// --- FIN BLOQUE TORTUGA ---
+		
+		// --- ¡NUEVO! DIBUJAR NUTRIA ---
+		
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, nutriaPos);
+		model = glm::rotate(model, glm::radians(nutriaRotY), glm::vec3(0.0f, 1.0f, 0.0f)); // Dirección
+		model = glm::scale(model, glm::vec3(nutriaScale));
+
+		// Aplicamos el giro del clavado (rotNutriaCuerpoX) a la matriz 'model'
+		// ANTES de guardarla en modelTemp. Así, todas las partes heredarán el giro.
+		model = glm::rotate(model, glm::radians(rotNutriaCuerpoX), glm::vec3(1.0f, 0.0f, 0.0f));
+		
+		modelTemp = model; // Guardar matriz base (AHORA CON EL GIRO DEL CLAVADO)
+		
+		// Dibujar Cuerpo
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		NutriaBody.Draw(lightingShader);
+
+		// Cabeza
+		glm::vec3 pivoteNutriaHead(0.0f, 0.2f, 0.3f); // <-- ¡AJUSTA ESTE PIVOTE!
+		model = modelTemp; // Usa la matriz base (CON giro)
+		model = glm::translate(model, pivoteNutriaHead);
+		model = glm::rotate(model, glm::radians(rotNutriaHead), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::translate(model, -pivoteNutriaHead);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		NutriaHead.Draw(lightingShader);
+
+		// Cola
+		glm::vec3 pivoteNutriaCola(0.0f, 0.1f, -0.4f); // <-- ¡AJUSTA ESTE PIVOTE!
+		model = modelTemp;
+		model = glm::translate(model, pivoteNutriaCola);
+		model = glm::rotate(model, glm::radians(rotNutriaCola), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -pivoteNutriaCola);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		NutriaCola.Draw(lightingShader);
+		
+		// --- ¡MODIFICADO! (Arreglo 1: Patas desfasadas) ---
+		// Subí el valor Y (segundo número) de los pivotes para pegarlos al cuerpo.
+		
+		// Pata Delantera Izquierda
+		glm::vec3 pivoteNutriaFL(0.1f, 0.6f, 0.2f); // <-- ¡AJUSTA! (Subí Y de 0.3 a 0.4)
+		model = modelTemp;
+		model = glm::translate(model, pivoteNutriaFL);
+		model = glm::rotate(model, glm::radians(rotNutriaFL), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -pivoteNutriaFL);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		NutriaPataFL.Draw(lightingShader);
+
+		// Pata Delantera Derecha
+		glm::vec3 pivoteNutriaFR(-0.1f, 0.6f, 0.2f); // <-- ¡AJUSTA! (Subí Y de 0.3 a 0.4)
+		model = modelTemp;
+		model = glm::translate(model, pivoteNutriaFR);
+		model = glm::rotate(model, glm::radians(rotNutriaFR), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -pivoteNutriaFR);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		NutriaPataFR.Draw(lightingShader);
+
+		// Pata Trasera Izquierda
+		glm::vec3 pivoteNutriaBL(0.1f, 0.3f, -0.3f); // <-- (Y es 0.3)
+		model = modelTemp;
+		model = glm::translate(model, pivoteNutriaBL);
+		model = glm::rotate(model, glm::radians(rotNutriaBL), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -pivoteNutriaBL);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		NutriaPataBL.Draw(lightingShader);
+
+		// Pata Trasera Derecha
+		glm::vec3 pivoteNutriaBR(-0.1f, 0.3f, -0.3f); // <-- (Y es 0.3)
+		model = modelTemp;
+		model = glm::translate(model, pivoteNutriaBR);
+		model = glm::rotate(model, glm::radians(rotNutriaBR), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -pivoteNutriaBR);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		NutriaPataBR.Draw(lightingShader);
+		// --- FIN BLOQUE NUTRIA ---
 		// --- DIBUJO IGLU ---
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(11.2f, -0.4f, -9.0f));
@@ -1576,17 +1803,17 @@ int main()
 		rotCabeza = sin(t_aves * 1.5f) * 15.0f; // Gira 15 grados a los lados
 
 
-		// --- ¡MODIFICADO! ---
+		
 		// =================================================================================
 		// 							ANIMACIÓN DE ANIMALES - ACUARIO (PINGUINO)
 		// =================================================================================
 
-		// 1. Definir el ciclo
+		// 1.ciclo
 		float cycleDuration = 10.0f; // 10 segundos en total
 		float walkDuration = 4.0f;   // 4 seg para caminar
 		float turnDuration = 1.0f;   // 1 seg para girar
 
-		// fmod nos da un tiempo que se repite de 0.0 a 10.0
+		// fmod da un tiempo que se repite de 0.0 a 10.0
 		float t_pingu = fmod(glfwGetTime(), cycleDuration);
 
 		// 2. Definir las fases del ciclo
@@ -1594,12 +1821,10 @@ int main()
 		float walkBackStartTime = turn1StartTime + turnDuration; // 5.0s
 		float turn2StartTime = walkBackStartTime + walkDuration; // 9.0s
 
-		// --- ¡MODIFICADO! ---
-		// 3. Definir las posiciones de inicio y fin (AHORA CAMINANDO EN EJE X)
-		// Camina desde 'pinguBasePos.x - pinguWalkDist' hasta 'pinguBasePos.x + pinguWalkDist'
+		
 		glm::vec3 pinguStartPos = glm::vec3(pinguBasePos.x - pinguWalkDist, pinguBasePos.y, pinguBasePos.z);
 		glm::vec3 pinguEndPos = glm::vec3(pinguBasePos.x + pinguWalkDist, pinguBasePos.y, pinguBasePos.z);
-		// --- FIN MODIFICADO ---
+		
 
 		// 4. Lógica de Estado
 		if (t_pingu < turn1StartTime) // Fase 1: Caminar Adelante (0s a 4s)
@@ -1607,33 +1832,33 @@ int main()
 			// Interpolar la posición
 			float t_interp = t_pingu / walkDuration; // 0.0 a 1.0
 			pinguPos = glm::mix(pinguStartPos, pinguEndPos, t_interp);
-			pinguRotY = 90.0f; // --- ¡MODIFICADO! Mirando en dirección +X (flecha roja)
+			pinguRotY = 90.0f; // --- 
 
 			// Animar movimiento
-			float pasoPingu = sin(t_pingu * 8.0f); // Aleteo y patas (más rápido)
+			float pasoPingu = sin(t_pingu * 8.0f); // Aleteo y patas 
 			rotPataIzqPingu = pasoPingu * 20.0f;
 			rotPataDerPingu = -pasoPingu * 20.0f;
 			rotCuerpoPingu = pasoPingu * 5.0f; // Balanceo
 			rotAletaIzqPingu = abs(pasoPingu) * 25.0f;
 			rotAletaDerPingu = abs(pasoPingu) * 25.0f;
 		}
-		else if (t_pingu < walkBackStartTime) // Fase 2: Girar 180 (4s a 5s)
+		else if (t_pingu < walkBackStartTime) // Fase 2: Girar 180 
 		{
 			pinguPos = pinguEndPos; // Quedarse quieto en el punto final
 
 			// Interpolar la rotación
 			float t_interp = (t_pingu - turn1StartTime) / turnDuration; // 0.0 a 1.0
-			pinguRotY = 90.0f + (t_interp * 180.0f); // --- ¡MODIFICADO! Gira de 90 a 270
+			pinguRotY = 90.0f + (t_interp * 180.0f); 
 
-			// Detener animación de extremidades
+			// Detener animación 
 			rotPataIzqPingu = 0.0f; rotPataDerPingu = 0.0f; rotCuerpoPingu = 0.0f; rotAletaIzqPingu = 0.0f; rotAletaDerPingu = 0.0f;
 		}
-		else if (t_pingu < turn2StartTime) // Fase 3: Caminar de Regreso (5s a 9s)
+		else if (t_pingu < turn2StartTime) // Fase 3: Caminar de Regreso
 		{
-			// Interpolar la posición (al revés)
+			// Interpolar la posición 
 			float t_interp = (t_pingu - walkBackStartTime) / walkDuration; // 0.0 a 1.0
 			pinguPos = glm::mix(pinguEndPos, pinguStartPos, t_interp);
-			pinguRotY = 270.0f; // --- ¡MODIFICADO! Mirando en dirección -X
+			pinguRotY = 270.0f; 
 
 			// Animar movimiento
 			float pasoPingu = sin(t_pingu * 8.0f); // Aleteo y patas
@@ -1643,44 +1868,211 @@ int main()
 			rotAletaIzqPingu = abs(pasoPingu) * 25.0f;
 			rotAletaDerPingu = abs(pasoPingu) * 25.0f;
 		}
-		else // Fase 4: Girar de Regreso (9s a 10s)
+		else // Fase 4: Girar de Regreso 
 		{
 			pinguPos = pinguStartPos; // Quedarse quieto en el punto inicial
 
 			// Interpolar la rotación
 			float t_interp = (t_pingu - turn2StartTime) / turnDuration; // 0.0 a 1.0
-			pinguRotY = 270.0f + (t_interp * 180.0f); // --- ¡MODIFICADO! Gira de 270 a 450 (que es 90)
+			pinguRotY = 270.0f + (t_interp * 180.0f); 
 
-			// Detener animación de extremidades
+			// Detener animación 
 			rotPataIzqPingu = 0.0f; rotPataDerPingu = 0.0f; rotCuerpoPingu = 0.0f; rotAletaIzqPingu = 0.0f; rotAletaDerPingu = 0.0f;
 		}
+		
+		// =================================================================================
+		// 							ANIMACIÓN DE ANIMALES - ACUARIO (TORTUGA)
+		// =================================================================================
+		
 
+		// 3. Definir las posiciones de inicio y fin 
+		
+		glm::vec3 tortugaStartPos = glm::vec3(tortugaBasePos.x - tortugaSwimDist, tortugaBasePos.y, tortugaBasePos.z);
+		glm::vec3 tortugaEndPos = glm::vec3(tortugaBasePos.x + tortugaSwimDist, tortugaBasePos.y, tortugaBasePos.z);
+
+		if (animarTortugaAcuario)
+		{
+			// 1. Definir el ciclo
+			float cycleDuration = 12.0f; // 12 segundos en total
+			float swimDuration = 5.0f;   // 5 seg para nadar
+			float turnDuration = 1.0f;   // 1 seg para girar
+
+			float t_turt = fmod(glfwGetTime() - startTimeTortugaAcuario, cycleDuration);
+
+			// 2. Definir las fases
+			float turn1StartTime = swimDuration; // 5.0s
+			float swimBackStartTime = turn1StartTime + turnDuration; // 6.0s
+			float turn2StartTime = swimBackStartTime + swimDuration; // 11.0s
+
+			// 4. Lógica de Estado
+			float nado = sin(t_turt * 4.0f); // Frecuencia de nado
+			if (t_turt < turn1StartTime) // Fase 1: Nadar Adelante
+			{
+				float t_interp = t_turt / swimDuration;
+				tortugaAcuarioPos = glm::mix(tortugaStartPos, tortugaEndPos, t_interp);
+				tortugaAcuarioRotY = 90.0f; // 
+
+				//  Aleteo y balanceo ---
+				rotTortugaAcuarioFL = nado * 25.0f;
+				rotTortugaAcuarioFR = -nado * 25.0f;
+				rotTortugaAcuarioBL = -nado * 15.0f;
+				rotTortugaAcuarioBR = nado * 15.0f;
+				rotTortugaAcuarioHead = nado * 10.0f; 
+				rotTortugaAcuarioCuerpo = nado * 5.0f;
+			}
+			else if (t_turt < swimBackStartTime) // Fase 2: Girar 180 
+			{
+				tortugaAcuarioPos = tortugaEndPos;
+				float t_interp = (t_turt - turn1StartTime) / turnDuration;
+				tortugaAcuarioRotY = 90.0f - (t_interp * 180.0f); 
+
+				// Detener nado
+				rotTortugaAcuarioHead = 0.0f; rotTortugaAcuarioFL = 0.0f; rotTortugaAcuarioFR = 0.0f;
+				rotTortugaAcuarioBL = 0.0f; rotTortugaAcuarioBR = 0.0f; rotTortugaAcuarioCuerpo = 0.0f;
+			}
+			else if (t_turt < turn2StartTime) // Fase 3: Nadar de Regreso 
+			{
+				float t_interp = (t_turt - swimBackStartTime) / swimDuration;
+				tortugaAcuarioPos = glm::mix(tortugaEndPos, tortugaStartPos, t_interp);
+				tortugaAcuarioRotY = -90.0f; 
+
+				//  Aleteo y balanceo ---
+				rotTortugaAcuarioFL = nado * 25.0f;
+				rotTortugaAcuarioFR = -nado * 25.0f;
+				rotTortugaAcuarioBL = -nado * 15.0f;
+				rotTortugaAcuarioBR = nado * 15.0f;
+				rotTortugaAcuarioHead = nado * 10.0f; 
+				rotTortugaAcuarioCuerpo = nado * 5.0f; 
+			}
+			else // Fase 4: Girar de Regreso 
+			{
+				tortugaAcuarioPos = tortugaStartPos;
+				float t_interp = (t_turt - turn2StartTime) / turnDuration;
+				tortugaAcuarioRotY = -90.0f - (t_interp * 180.0f); 
+
+				// Detener nado
+				rotTortugaAcuarioHead = 0.0f; rotTortugaAcuarioFL = 0.0f; rotTortugaAcuarioFR = 0.0f;
+				rotTortugaAcuarioBL = 0.0f; rotTortugaAcuarioBR = 0.0f; rotTortugaAcuarioCuerpo = 0.0f;
+			}
+		}
+		else
+		{
+			// Resetear a la posición incial
+			tortugaAcuarioPos = tortugaStartPos;
+			tortugaAcuarioRotY = 90.0f; 
+
+			// Detener aletas y cabeza
+			rotTortugaAcuarioHead = 0.0f;
+			rotTortugaAcuarioFL = 0.0f;
+			rotTortugaAcuarioFR = 0.0f;
+			rotTortugaAcuarioBL = 0.0f;
+			rotTortugaAcuarioBR = 0.0f;
+			rotTortugaAcuarioCuerpo = 0.0f; 
+		}
+		// --- FIN ---
+		
+		// =================================================================================
+		// 							ANIMACIÓN DE ANIMALES - ACUARIO (NUTRIA)
+		// =================================================================================
+		if (animarNutria)
+		{
+			// Duración de cada etapa
+			float t_nutria = glfwGetTime() - startTimeNutria;
+			float t_impulso = 0.5f; // 0.5s para agacharse
+			float t_salto1 = 3.0f;  // 3 seg de roca a iglú
+			float t_salto2 = 3.0f;  // 3 seg de iglú a agua
+
+			float fase0End = t_impulso;
+			float fase1End = fase0End + t_salto1;
+			float fase2End = fase1End + t_salto2;
+
+			// --- FASE 0: Impulso (Agacharse) ---
+			if (t_nutria < fase0End)
+			{
+				nutriaPos = nutriaPos1_Roca; // No te muevas
+				// --- ¡CORREGIDO! Rotar para ver al iglú ---
+				nutriaRotY = 45.0f; // (Ajusta este ángulo)
+				rotNutriaCuerpoX = 15.0f; // Inclínate un poco
+
+				// Mueve las patas hacia atrás (agacharse)
+				float crouch = (t_nutria / t_impulso) * -20.0f;
+				rotNutriaFL = crouch; rotNutriaFR = crouch;
+				rotNutriaBL = crouch; rotNutriaBR = crouch;
+				rotNutriaCola = crouch / 2.0f;
+				rotNutriaHead = 10.0f; // Mirar un poco arriba
+			}
+			// --- FASE 1: Salto de Roca a Iglú ---
+			else if (t_nutria < fase1End)
+			{
+				float t_interp = (t_nutria - fase0End) / t_salto1;
+				nutriaPos = glm::mix(nutriaPos1_Roca, nutriaPos2_Iglu, t_interp);
+				nutriaPos.y += 1.5f * sin(glm::radians(t_interp * 180.0f));
+
+				nutriaRotY = 45.0f; // Mantiene la rotación al iglú
+				rotNutriaCuerpoX = 0.0f; // Cuerpo derecho
+
+				// Patas se encogen durante el salto
+				rotNutriaFL = 30.0f; rotNutriaFR = 30.0f;
+				rotNutriaBL = 30.0f; rotNutriaBR = 30.0f;
+				rotNutriaCola = 10.0f; rotNutriaHead = 0.0f;
+			}
+			// --- FASE 2: Clavado de Iglú a Agua ---
+			else if (t_nutria < fase2End)
+			{
+				float t_interp = (t_nutria - fase1End) / t_salto2;
+				nutriaPos = glm::mix(nutriaPos2_Iglu, nutriaPos3_Agua, t_interp);
+				nutriaPos.y += 2.0f * sin(glm::radians(t_interp * 180.0f));
+
+				// --- ¡CORREGIDO! Orientación del salto ---
+				nutriaRotY = 135.0f; // (Ajusta este ángulo para que mire al agua)
+				rotNutriaCuerpoX = t_interp * 360.0f; // Un giro completo en el aire
+
+				// --- ¡CORREGIDO! Reseteamos las patas/cabeza a 0 ---
+				// Dejamos que el giro del cuerpo (rotNutriaCuerpoX) haga todo el trabajo.
+				rotNutriaFL = 0.0f; rotNutriaFR = 0.0f; rotNutriaBL = 0.0f; rotNutriaBR = 0.0f;
+				rotNutriaHead = 0.0f; rotNutriaCola = 0.0f;
+			}
+			// --- FASE 3: En el agua ---
+			else
+			{
+				nutriaPos = nutriaPos3_Agua;
+				nutriaRotY = 135.0f;
+				rotNutriaCuerpoX = 360.0f; // Mantener rotación final
+
+				// Detener animación de patas
+				rotNutriaFL = 0.0f; rotNutriaFR = 0.0f; rotNutriaBL = 0.0f; rotNutriaBR = 0.0f;
+			}
+		}
+		else
+		{
+			// Resetear a la posición inicial (la roca)
+			nutriaPos = nutriaPos1_Roca;
+			nutriaRotY = 45.0f; // --- ¡CORREGIDO! Que mire al iglú al resetear
+			rotNutriaCuerpoX = 0.0f;
+			// Resetear partes del cuerpo
+			rotNutriaHead = 0.0f; rotNutriaCola = 0.0f; rotNutriaFL = 0.0f;
+			rotNutriaFR = 0.0f; rotNutriaBL = 0.0f; rotNutriaBR = 0.0f;
+		}
+		// --- FIN---
 
 		// =================================================================================
 		// 							DIBUJO DE MODELOS - AVIARIO (CENTRO)
 		// =================================================================================
-
-		// --- ¡MODIFICADO! ---
-		// Esta es la forma correcta de manejar modelos con partes opacas y transparentes.
-
-		// --- 1. DIBUJAR LA PARTE OPACA (Madera) ---
-		// No necesita GL_BLEND. Usa 'transparency = 0' (que es el valor por defecto
-		// después de que lo reseteamos al final del bucle).
 
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
 		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-		AviarioMadera.Draw(lightingShader); // <-- Dibuja solo la madera
+		AviarioMadera.Draw(lightingShader); 
 
 
-		// --- 2. DIBUJAR LA PARTE TRANSPARENTE (Vidrio) ---
+		//  (Vidrio)
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		// "Encendemos" el interruptor 'transparency' en el shader
+		//  interruptor 'transparency' en el shader
 		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 1);
 
 		// Volvemos a aplicar la misma transformación para el vidrio
@@ -1689,76 +2081,73 @@ int main()
 		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-		AviarioVidrio.Draw(lightingShader); // <-- Dibuja solo el vidrio
+		AviarioVidrio.Draw(lightingShader); 
 
 
 		// --- DIBUJAR EL AVE ---
-		// (La dibujamos aquí para que esté dentro del vidrio transparente)
-
-		// ¡IMPORTANTE! Tus texturas de ave NO son transparentes.
-		// Le decimos al shader que las dibuje OPACAS (transparency = 0)
+	
 		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 0);
 
-		// Cuerpo: Esta es la matriz "padre"
+		// Cuerpo
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, avePos);
-		model = glm::scale(model, glm::vec3(0.5f)); // <-- AJUSTA EL TAMAÑO
-		modelTemp = model; // Guardamos la matriz del cuerpo
+		model = glm::scale(model, glm::vec3(0.5f)); 
+		modelTemp = model; 
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		AveCuerpo.Draw(lightingShader);
 
 		// Cabeza
-		// --- ¡DEBES ENCONTRAR ESTE PIVOTE! ---
-		glm::vec3 pivoteCabeza(0.0f, 0.5f, 0.1f); // (X,Y,Z) desde el centro del cuerpo (INVENTADO)
+		
+		glm::vec3 pivoteCabeza(0.0f, 0.5f, 0.1f); 
 		model = modelTemp;
 		model = glm::translate(model, pivoteCabeza);
-		model = glm::rotate(model, glm::radians(rotCabeza), glm::vec3(0.0f, 1.0f, 0.0f)); // Rota en Y
+		model = glm::rotate(model, glm::radians(rotCabeza), glm::vec3(0.0f, 1.0f, 0.0f)); 
 		model = glm::translate(model, -pivoteCabeza);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		AveCabeza.Draw(lightingShader);
 
 		// Ala Izquierda
-		// --- ¡DEBES ENCONTRAR ESTE PIVOTE! ---
-		glm::vec3 pivoteAlaIzq(0.3f, 0.3f, 0.0f); // (X,Y,Z) desde el centro del cuerpo (INVENTADO)
+	
+		glm::vec3 pivoteAlaIzq(0.3f, 0.3f, 0.0f); 
 		model = modelTemp;
 		model = glm::translate(model, pivoteAlaIzq);
-		model = glm::rotate(model, glm::radians(rotAlaIzq), glm::vec3(0.0f, 0.0f, 1.0f)); // Rota en Z (aleteo)
+		model = glm::rotate(model, glm::radians(rotAlaIzq), glm::vec3(0.0f, 0.0f, 1.0f)); 
 		model = glm::translate(model, -pivoteAlaIzq);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		AveAlaIzq.Draw(lightingShader);
 
 		// Ala Derecha
-		// --- ¡DEBES ENCONTRAR ESTE PIVOTE! ---
-		glm::vec3 pivoteAlaDer(-0.3f, 0.3f, 0.0f); // (X,Y,Z) desde el centro del cuerpo (INVENTADO)
+		
+		glm::vec3 pivoteAlaDer(-0.3f, 0.3f, 0.0f); 
 		model = modelTemp;
 		model = glm::translate(model, pivoteAlaDer);
-		model = glm::rotate(model, glm::radians(rotAlaDer), glm::vec3(0.0f, 0.0f, 1.0f)); // Rota en Z
+		model = glm::rotate(model, glm::radians(rotAlaDer), glm::vec3(0.0f, 0.0f, 1.0f)); 
 		model = glm::translate(model, -pivoteAlaDer);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		AveAlaDer.Draw(lightingShader);
 
 		// Cola
-		// --- ¡DEBES ENCONTRAR ESTE PIVOTE! ---
-		glm::vec3 pivoteCola(0.0f, 0.1f, -0.4f); // (INVENTADO)
+		
+		glm::vec3 pivoteCola(0.0f, 0.1f, -0.4f); 
 		model = modelTemp;
 		model = glm::translate(model, pivoteCola);
-		// (No hay rotación para la cola en este ejemplo, pero aquí iría)
+		
 		model = glm::translate(model, -pivoteCola);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		AveCola.Draw(lightingShader);
 
 		// Patas
-		// --- ¡DEBES ENCONTRAR ESTE PIVOTE! ---
-		glm::vec3 pivotePatas(0.0f, -0.2f, 0.0f); // (INVENTADO)
+		
+		glm::vec3 pivotePatas(0.0f, -0.2f, 0.0f); 
 		model = modelTemp;
 		model = glm::translate(model, pivotePatas);
-		// (No hay rotación para las patas)
+		
 		model = glm::translate(model, -pivotePatas);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		AvePatas.Draw(lightingShader);
 
 
-		// Desactivamos todo para el resto de la escena
+		
 		glDisable(GL_BLEND);
 		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 0);
 
@@ -1771,10 +2160,10 @@ int main()
 		model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));// Rotación global en Y
 		model = glm::rotate(model, glm::radians(pinguRotY), glm::vec3(0.0f, 1.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(pinguScale)); // Escala global
-		modelTemp = model; // Guardamos matriz del cuerpo
+		modelTemp = model; 
 
 		// Aplicar balanceo del cuerpo
-		model = glm::translate(model, glm::vec3(0.0f, 0.5f, 0.0f)); // Mover origen al centro del cuerpo (aprox)
+		model = glm::translate(model, glm::vec3(0.0f, 0.5f, 0.0f)); 
 		model = glm::rotate(model, glm::radians(rotCuerpoPingu), glm::vec3(0.0f, 0.0f, 1.0f)); // Rotar en Z
 		model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f)); // Volver a la posición original
 
@@ -1782,8 +2171,8 @@ int main()
 		PinguCuerpo.Draw(lightingShader);
 
 		// Aleta Izquierda
-		glm::vec3 pivoteAletaIzq(0.18f, 0.5f, 0.0f); // AJUSTADO A MANO
-		model = modelTemp; // Usa la matriz base sin el balanceo del cuerpo para los apéndices
+		glm::vec3 pivoteAletaIzq(0.18f, 0.5f, 0.0f); 
+		model = modelTemp; 
 		model = glm::translate(model, pivoteAletaIzq);
 		model = glm::rotate(model, glm::radians(rotAletaIzqPingu), glm::vec3(1.0f, 0.0f, 0.0f)); // Rota en X
 		model = glm::translate(model, -pivoteAletaIzq);
@@ -1791,8 +2180,8 @@ int main()
 		PinguAletaIzq.Draw(lightingShader);
 
 		// Aleta Derecha
-		glm::vec3 pivoteAletaDer(-0.18f, 0.5f, 0.0f); // AJUSTADO A MANO
-		model = modelTemp; // Usa la matriz base sin el balanceo del cuerpo para los apéndices
+		glm::vec3 pivoteAletaDer(-0.18f, 0.5f, 0.0f); 
+		model = modelTemp; 
 		model = glm::translate(model, pivoteAletaDer);
 		model = glm::rotate(model, glm::radians(rotAletaDerPingu), glm::vec3(1.0f, 0.0f, 0.0f)); // Rota en X
 		model = glm::translate(model, -pivoteAletaDer);
@@ -1800,8 +2189,8 @@ int main()
 		PinguAletaDer.Draw(lightingShader);
 
 		// Pata Izquierda
-		glm::vec3 pivotePataIzq(0.06f, -0.4f, 0.02f); // AJUSTADO A MANO
-		model = modelTemp; // Usa la matriz base sin el balanceo del cuerpo para los apéndices
+		glm::vec3 pivotePataIzq(0.06f, -0.4f, 0.02f); 
+		model = modelTemp; 
 		model = glm::translate(model, pivotePataIzq);
 		model = glm::rotate(model, glm::radians(rotPataIzqPingu), glm::vec3(1.0f, 0.0f, 0.0f)); // Rota en X
 		model = glm::translate(model, -pivotePataIzq);
@@ -1809,8 +2198,8 @@ int main()
 		PinguPataIzq.Draw(lightingShader);
 
 		// Pata Derecha
-		glm::vec3 pivotePataDer(-0.06f, -0.4f, 0.02f); // AJUSTADO A MANO
-		model = modelTemp; // Usa la matriz base sin el balanceo del cuerpo para los apéndices
+		glm::vec3 pivotePataDer(-0.06f, -0.4f, 0.02f); 
+		model = modelTemp; 
 		model = glm::translate(model, pivotePataDer);
 		model = glm::rotate(model, glm::radians(rotPataDerPingu), glm::vec3(1.0f, 0.0f, 0.0f)); // Rota en X
 		model = glm::translate(model, -pivotePataDer);
@@ -2061,6 +2450,46 @@ void DoMovement()
 	{
 		teclaM_presionada = false;
 	}
+	// --- ¡NUEVO! NUTRIA ACUARIO (Tecla N) ---
+	if (keys[GLFW_KEY_N])
+	{
+		if (!teclaN_presionada)
+		{
+			animarNutria = !animarNutria;
+			startTimeNutria = glfwGetTime();
+			teclaN_presionada = true;
+		}
+	}
+	else
+	{
+		teclaN_presionada = false;
+	}
+	// --- FIN NUEVO ---
+
+	if (keys[GLFW_KEY_H])
+	{
+		pointLightPositions[0].y -= 0.01f;
+	}
+	//  TORTUGA ACUARIO (Tecla T) ---
+	if (keys[GLFW_KEY_T])
+	{
+		if (!teclaT_presionada)
+		{
+			animarTortugaAcuario = !animarTortugaAcuario;
+			startTimeTortugaAcuario = glfwGetTime();
+			teclaT_presionada = true;
+		}
+	}
+	else
+	{
+		teclaT_presionada = false;
+	}
+	// --- FIN ---
+
+	if (keys[GLFW_KEY_H])
+	{
+		pointLightPositions[0].y -= 0.01f;
+	}
 
 	if (keys[GLFW_KEY_H])
 	{
@@ -2074,6 +2503,7 @@ void DoMovement()
 	{
 		pointLightPositions[0].z += 0.01f;
 	}
+
 
 }
 
