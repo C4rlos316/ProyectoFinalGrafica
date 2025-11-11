@@ -95,7 +95,7 @@ float guacamayaAlaIzq = 0.0f;
 glm::vec3 guacamayaPos = glm::vec3(11.1f, 1.55f, 6.5f); 
 bool animarGuacamaya = false;
 float startTimeGuacamaya = 0.0f;
-bool teclaN_presionada = false;                                                                                                                   
+bool teclaO_presionada = false;                                                                                                                   
 
 // -----------------------------------------
 //  ACUARIO (X,-Z)
@@ -1677,18 +1677,18 @@ void DoMovement()
 	}
 
 	//GUACAMAYA
-	if (keys[GLFW_KEY_N])
+	if (keys[GLFW_KEY_O])
 	{
-		if (!teclaN_presionada)
+		if (!teclaO_presionada)
 		{
 			animarGuacamaya = !animarGuacamaya;
 			startTimeGuacamaya = glfwGetTime();
-			teclaN_presionada = true;
+			teclaO_presionada = true;
 		}
 	}
 	else
 	{
-		teclaN_presionada = false;
+		teclaO_presionada = false;
 	}
 
 	if (keys[GLFW_KEY_H])
