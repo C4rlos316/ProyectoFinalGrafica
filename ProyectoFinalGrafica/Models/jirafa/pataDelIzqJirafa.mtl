@@ -1,0 +1,12 @@
+# Blender 4.5.2 LTS MTL File: 'jirafa.blend'
+# www.blender.org
+
+newmtl Material.001
+Ns 107.107430
+Ka 1.000000 1.000000 1.000000
+Ks 0.054545 0.054545 0.054545
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 2
+map_Kd Giraffe_UV.png
+map_d Giraffe_UV.png

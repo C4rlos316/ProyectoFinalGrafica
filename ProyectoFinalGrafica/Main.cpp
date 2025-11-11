@@ -495,6 +495,11 @@ int main()
 	// 						CARGA DE MODELOS - Sabana (-X,-Z)
 	// =================================================================================
 
+	Model ArbolSabana((char*)"Models/arbolSabana/arbol.obj");
+	glm::vec3 arbolSabanaPos(-11.0f, 1.0f, -3.2f);
+	glm::vec3 arbolSabanaScale(3.5f, 3.5f, 3.5f);
+	float arbolSabanaRot = 0.0f;
+
 	//ELEFANTE
 	 
 	Model ElefanteBody((char*)"Models/elefante/elefante_cuerpo.obj");
@@ -1198,7 +1203,13 @@ int main()
 		// **** DIBUJO DEL PISO SABANA Y ACCESORIOS SABANA ****
 		DibujarPiso(pisoSabanaTextureID, glm::vec3(-7.25f, -0.49f, -7.25f), glm::vec3(10.5f, 0.1f, 10.5f), VAO_Cubo, modelLoc);
 
-
+		// --- Arbol ---
+		model = glm::mat4(1);
+		model = glm::translate(model, arbolSabanaPos);
+		model = glm::scale(model, arbolSabanaScale);
+		model = glm::rotate(model, glm::radians(arbolSabanaRot), glm::vec3(0.0f, 1.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		ArbolSabana.Draw(lightingShader);
 
 		// **** DIBUJO DE ANIMALES SABANA ****
 
