@@ -16,6 +16,8 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "Model.h"
+//Skybox
+//#include "Texture.h"
 // Funciones prototipo para callbacks
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void MouseCallback(GLFWwindow* window, double xPos, double yPos);
@@ -36,6 +38,7 @@ int SCREEN_WIDTH, SCREEN_HEIGHT;
 
 // Configuración de la cámara
 Camera  camera(glm::vec3(0.0f, 1.0f, 21.0f));
+bool teclaTAB_presionada = false; // Para cambiar de cámara
 GLfloat lastX = WIDTH / 2.0;
 GLfloat lastY = HEIGHT / 2.0;
 bool keys[1024];
@@ -337,10 +340,60 @@ int main()
 	Shader lightingShader("Shader/lighting.vs", "Shader/lighting.frag");
 	Shader lampShader("Shader/lamp.vs", "Shader/lamp.frag");
 
+	//Skybox
+	
+	////Skybox
+//Shader skyboxShader("Shader/skybox.vs", "Shader/skybox.frag");
+//// Vértices de cubo del skybox
+//float skyboxVertices[] = {
+//	-1.0f,  1.0f, -1.0f,
+//	-1.0f, -1.0f, -1.0f,
+//	 1.0f, -1.0f, -1.0f,
+//	 1.0f, -1.0f, -1.0f,
+//	 1.0f,  1.0f, -1.0f,
+//	-1.0f,  1.0f, -1.0f,
+//	-1.0f, -1.0f,  1.0f,
+//	-1.0f, -1.0f, -1.0f,
+//	-1.0f,  1.0f, -1.0f,
+//	-1.0f,  1.0f, -1.0f,
+//	-1.0f,  1.0f,  1.0f,
+//	-1.0f, -1.0f,  1.0f,
+//	 1.0f, -1.0f, -1.0f,
+//	 1.0f, -1.0f,  1.0f,
+//	 1.0f,  1.0f,  1.0f,
+//	 1.0f,  1.0f,  1.0f,
+//	 1.0f,  1.0f, -1.0f,
+//	 1.0f, -1.0f, -1.0f,
+//	-1.0f, -1.0f,  1.0f,
+//	-1.0f,  1.0f,  1.0f,
+//	 1.0f,  1.0f,  1.0f,
+//	 1.0f,  1.0f,  1.0f,
+//	 1.0f, -1.0f,  1.0f,
+//	-1.0f, -1.0f,  1.0f,
+//	-1.0f,  1.0f, -1.0f,
+//	 1.0f,  1.0f, -1.0f,
+//	 1.0f,  1.0f,  1.0f,
+//	 1.0f,  1.0f,  1.0f,
+//	-1.0f,  1.0f,  1.0f,
+//	-1.0f,  1.0f, -1.0f,
+//	-1.0f, -1.0f, -1.0f,
+//	-1.0f, -1.0f,  1.0f,
+//	 1.0f, -1.0f, -1.0f,
+//	 1.0f, -1.0f, -1.0f,
+//	-1.0f, -1.0f,  1.0f,
+//	 1.0f, -1.0f,  1.0f
+//};
+// 
 	// =================================================================================
 	// 						CARGA DE MODELOS - Acuario (X,-Z)
 	// =================================================================================
 	// (Asegúrate de que la ruta 'Models/Acuario/escenarioAcuario.obj' sea correcta)
+
+	// =================================================================================
+	// 						CARGA DE MODELO - Personaje camara
+	// =================================================================================
+	Model PersonajeAlex((char*)"Models/alex_leon/alex_leon.obj");
+
 	Model EscenarioAcuario((char*)"Models/Acuario/escenarioacuario.obj");
 
 	// --- Cargar Pinguino ---
@@ -571,6 +624,23 @@ int main()
 	GLuint VBO_Entrada, VAO_Entrada;
 	ConfigurarVAO(VAO_Entrada, VBO_Entrada, vertices, sizeof(vertices));
 
+	////SKYBOX
+//GLuint skyboxVBO, skyboxVAO;
+//glGenVertexArrays(1, &skyboxVAO);
+//glGenBuffers(1, &skyboxVBO);
+//glBindVertexArray(skyboxVAO);
+//glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+//glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+//glEnableVertexAttribArray(0);
+//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+//vector <const GLchar*> faces;
+//faces.push_back("images/skybox/right.jpg");
+//faces.push_back("images/skybox/left.jpg");
+//faces.push_back("images/skybox/top.jpg");
+//faces.push_back("images/skybox/bottom.jpg");
+//faces.push_back("images/skybox/back.jpg");
+//faces.push_back("images/skybox/front.jpg");
+//GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 
 	// =================================================================================
 	// 								CICLO DE RENDERIZADO
@@ -713,6 +783,27 @@ int main()
 		// Pared derecha (X positiva)
 		DibujarPiso(paredTextureID, glm::vec3(tamanoBase / 2, alturaPared / 2 - 0.5f, 0.0f),
 			glm::vec3(0.2f, alturaPared, tamanoBase), VAO_Pared, modelLoc);
+
+		// Dibujar personaje en tercera persona
+		if (camera.GetCameraType() == THIRD_PERSON)
+		{
+			glm::vec3 personPos = camera.GetPosition();
+
+			// --- Calcular rotación basada en la dirección de la cámara ---
+			glm::vec3 cameraFront = camera.GetFront();
+			float yawAngle = glm::degrees(atan2(cameraFront.x, cameraFront.z)); // Ángulo en grados
+
+			model = glm::mat4(1);
+			model = glm::translate(model, glm::vec3(personPos.x, personPos.y - 1.4f, personPos.z));
+
+			// --Rotar según la dirección de la cámara ---
+			model = glm::rotate(model, glm::radians(yawAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+
+			model = glm::scale(model, glm::vec3(0.02f, 0.02f, 0.02f));
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+			PersonajeAlex.Draw(lightingShader);
+		}
 
 
 		// ---------------------------------------------------------------------------------
@@ -1727,27 +1818,26 @@ int main()
 		PinguPataDer.Draw(lightingShader);
 
 
-		//CONDOR
-
-		//// Pata delantera izquierda
-		//glm::vec3 tortugaPivotFL(0.2f, 0.3f, 0.3f);
-		//model = modelTemp;
-		//model = glm::translate(model, tortugaPivotFL);
-		//model = glm::rotate(model, glm::radians(tortugaLegFL), glm::vec3(1.0f, 0.0f, 0.0f));
-		//model = glm::translate(model, -tortugaPivotFL);
-		//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		//TortugaLeg_FL.Draw(lightingShader);
-
-		//// Pata delantera derecha
-		//glm::vec3 tortugaPivotFR(-0.2f, 0.3f, 0.3f);
-		//model = modelTemp;
-		//model = glm::translate(model, tortugaPivotFR);
-		//model = glm::rotate(model, glm::radians(tortugaLegFR), glm::vec3(1.0f, 0.0f, 0.0f));
-		//model = glm::translate(model, -tortugaPivotFR);
-		//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		//TortugaLeg_FR.Draw(lightingShader);
 
 		lightingShader.Use(); // shader de iluminación 
+
+//// ========================================================================
+//// DIBUJAR SKYBOX
+//// ========================================================================
+//glDepthFunc(GL_LEQUAL);
+//skyboxShader.Use();
+//view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+//glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+//glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+//glBindVertexArray(skyboxVAO);
+//glActiveTexture(GL_TEXTURE0);
+//glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
+//glDrawArrays(GL_TRIANGLES, 0, 36);
+//glBindVertexArray(0);
+//glDepthFunc(GL_LESS);
+////IMPORTANTE: Desenlazar la textura del skybox
+//glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
@@ -1861,6 +1951,26 @@ void DoMovement()
 		camera.ProcessKeyboard(RIGHT, deltaTime);
 		
 
+	}
+
+	// CAMBIAR TIPO DE CÁMARA (Primera/Tercera persona)
+	if (keys[GLFW_KEY_TAB])
+	{
+		if (!teclaTAB_presionada)
+		{
+			camera.ToggleCameraType();
+			teclaTAB_presionada = true;
+
+			// Mensaje en consola (opcional)
+			if (camera.GetCameraType() == FIRST_PERSON)
+				std::cout << "Camara: PRIMERA PERSONA" << std::endl;
+			else
+				std::cout << "Camara: TERCERA PERSONA" << std::endl;
+		}
+	}
+	else
+	{
+		teclaTAB_presionada = false;
 	}
 
 	//ELEFANTE
