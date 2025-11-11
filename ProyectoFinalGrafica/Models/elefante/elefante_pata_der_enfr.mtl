@@ -1,0 +1,32 @@
+# Blender 4.5.2 LTS MTL File: 'elefante.blend'
+# www.blender.org
+
+newmtl African_Elephant_Male_Eye.001
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+
+newmtl African_Elephant_Male_Hair.001
+Ns 994.149231
+Ka 1.000000 1.000000 1.000000
+Ks 0.000781 0.000781 0.000781
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd skin.png
+
+newmtl African_Elephant_Male_Skin.001
+Ns 128.946289
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd skin_elephant.jpeg

@@ -1,0 +1,35 @@
+# Blender 4.5.2 LTS MTL File: 'None'
+# www.blender.org
+
+newmtl Material__2
+Ns 11.111113
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd Sequoia_sempervirens_bark_1_Diffuse.png
+map_Bump -bm 1.000000 Sequoia_sempervirens_bark_1_normal.png
+
+newmtl Material__3
+Ns 11.111113
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd Sequoia_sempervirens_bark_1_Diffuse.png
+map_Bump -bm 1.000000 Sequoia_sempervirens_bark_1_normal.png
+
+newmtl Material__4
+Ns 11.111113
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 1
+map_Kd Sequoia_sempervirens_leaf_1_01_diffuse.png
+map_d Sequoia_sempervirens_leaf_1_06_mask.png
+map_Bump -bm 1.000000 Sequoia_sempervirens_leaf_1_04_normal.png
