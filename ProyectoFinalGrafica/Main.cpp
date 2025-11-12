@@ -1,32 +1,30 @@
 #include <iostream>
 #include <cmath>
-// GLEW
 #include <GL/glew.h>
-// GLFW
 #include <GLFW/glfw3.h>
-// Other Libs
 #include "stb_image.h"
-// GLM Mathematics
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-//Load Models
 #include "SOIL2/SOIL2.h"
+
 // Other includes
 #include "Shader.h"
 #include "Camera.h"
 #include "Model.h"
 //Skybox
 #include "Texture.h"
+
+
 // Funciones prototipo para callbacks
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void MouseCallback(GLFWwindow* window, double xPos, double yPos);
 void DoMovement();
 
 
-// =================================================================================
+// ====================================================
 // 	CONFIGURACIÓN INICIAL Y VARIABLES GLOBALES
-// =================================================================================
+// ====================================================
 //Configurar funciones para repetir textura de piso
 void ConfigurarVAO(GLuint& VAO, GLuint& VBO, float* vertices, size_t size);
 void ConfigurarTexturaRepetible(GLuint textureID);
@@ -38,11 +36,12 @@ int SCREEN_WIDTH, SCREEN_HEIGHT;
 
 // Configuración de la cámara
 Camera  camera(glm::vec3(0.0f, 1.0f, 21.0f));
-bool teclaTAB_presionada = false; // Para cambiar de cámara
+bool teclaTAB_presionada = false; // Tecla para cambiar de cámara a primera o tercera persona
 GLfloat lastX = WIDTH / 2.0;
 GLfloat lastY = HEIGHT / 2.0;
 bool keys[1024];
 bool firstMouse = true;
+
 // Posiciones de las luces
 glm::vec3 lightPos(1.5f, 2.0f, -2.5f);
 glm::vec3 lightPos2(-1.5f, 2.0f, -2.5f);
@@ -60,78 +59,62 @@ glm::vec3 pointLightPositions[] = {
 // =================================================================================
 
 // -----------------------------------------
-//  SELVA (X,Z)
-//  ACUARIO
+//  ACUARIO (X.-Z)
 // -----------------------------------------
+
+// PINGUINO
 float rotAletaIzqPingu = 0.0f;
 float rotAletaDerPingu = 0.0f;
 float rotPataIzqPingu = 0.0f;
 float rotPataDerPingu = 0.0f;
 float rotCuerpoPingu = 0.0f;
-
-
-glm::vec3 pinguBasePos = glm::vec3(7.25f, 0.5f, -9.8f); // El centro de la roca
+glm::vec3 pinguBasePos = glm::vec3(7.25f, 0.5f, -9.8f);
 glm::vec3 pinguPos = pinguBasePos; 
-float pinguWalkDist = 0.5f; // Caminará 0.5 unidades hacia adelante y 0.5 hacia atrás
-// --- FIN MODIFICADO ---
-
+float pinguWalkDist = 0.5f;
 float pinguRotY = 0.0f; 
 float pinguScale = 0.4f; 
-// --- TORTUGA ACUARIO  ---
+
+// TORTUGA ACUARIO
 float rotTortugaAcuarioHead = 0.0f;
 float rotTortugaAcuarioFL = 0.0f;
 float rotTortugaAcuarioFR = 0.0f;
 float rotTortugaAcuarioBL = 0.0f;
 float rotTortugaAcuarioBR = 0.0f;
 float rotTortugaAcuarioCuerpo = 0.0f; 
-
-
 glm::vec3 tortugaBasePos = glm::vec3(7.25f, -0.45f, -4.625f); 
 glm::vec3 tortugaAcuarioPos = tortugaBasePos; 
 float tortugaSwimDist = 4.5f; 
-// --- FIN MODIFICADO ---
-float tortugaAcuarioRotY = 0.0f; // Rotación de la animación
+float tortugaAcuarioRotY = 0.0f;
 float tortugaAcuarioScale = 0.01f;
 bool animarTortugaAcuario = false;
 bool teclaT_presionada = false; //tecla 'T'
 float startTimeTortugaAcuario = 0.0f;
-// --- FIN NUEVO ---
 
-// ---  NUTRIA ACUARIO ---
+
+//NUTRIA
 float rotNutriaHead = 0.0f;
 float rotNutriaCola = 0.0f;
 float rotNutriaFL = 0.0f;
 float rotNutriaFR = 0.0f;
 float rotNutriaBL = 0.0f;
 float rotNutriaBR = 0.0f;
-float rotNutriaCuerpoX = 0.0f; // Para el giro en el clavado
-float nutriaRotY = 0.0f; // Para la dirección
-// Posiciones de la animación (¡AJUSTA ESTAS COORDENADAS!)
-glm::vec3 nutriaPos1_Roca = glm::vec3(5.5f, 0.3f, -9.8f);   // Pos 1: Sobre la roca
-
-// --- ¡MODIFICADO! (Arreglo 2) ---
-// Sube el valor Y (segundo número) para que caiga ENCIMA del iglú, no adentro.
-glm::vec3 nutriaPos = glm::vec3(5.5f, 0.2f, -9.8f);   // Pos 1: Sobre la roca
-glm::vec3 nutriaPos2_Iglu = glm::vec3(11.2f, 1.0f, -9.0f);  // Pos 2: Sobre el iglú (Alto)
-
-// --- ¡MODIFICADO! (Arreglo 2: Clavado) ---
-// Bajamos la 'Y' final para que termine BAJO el agua
-glm::vec3 nutriaPos3_Agua = glm::vec3(10.5f, -1.0f, -6.5f); //
-float nutriaScale = 0.01f; // <-- ¡AJUSTA ESTA ESCALA!
+float rotNutriaCuerpoX = 0.0f;
+float nutriaRotY = 0.0f;
+glm::vec3 nutriaPos1_Roca = glm::vec3(5.5f, 0.3f, -9.8f);
+glm::vec3 nutriaPos = glm::vec3(5.5f, 0.2f, -9.8f);
+glm::vec3 nutriaPos2_Iglu = glm::vec3(11.2f, 1.0f, -9.0f);
+glm::vec3 nutriaPos3_Agua = glm::vec3(10.5f, -1.0f, -6.5f);
+float nutriaScale = 0.01f;
 bool animarNutria = false;
-bool teclaN_presionada = false; // Usaremos la tecla 'N'
+bool teclaN_presionada = false; // tecla 'N'
 float startTimeNutria = 0.0f;
-// --- FIN NUTRIA ---
+
 
 // -----------------------------------------
-//  DESIERTO
+//  SELVA (X,Z)
 // -----------------------------------------
 
-// -----------------------------------------
-//  DESIERTO
-// -----------------------------------------
-
-//  CAPIBARA (Cuadrante X, Z)
+// CAPIBARA ( X, Z)
 float capibaraScale = 1.0f;
 float rotCapibara = 180.0f;
 float capibaraCabezaRot = 0.0f;
@@ -145,7 +128,7 @@ bool animarCapibara = false;
 float startTimeCapibara = 0.0f;
 bool teclaP_presionada = false;
 
-//  MONO (Cuadrante X, Z)
+//  MONO ( X, Z)
 float monoScale = 1.0f;
 float rotMono = 180.0f;
 float monoColaRot = 0.0f;
@@ -158,7 +141,7 @@ bool animarMono = false;
 float startTimeMono = 0.0f;
 bool teclaM_presionada = false;
 
-// GUACAMAYA (Cuadrante X, Z)
+// GUACAMAYA ( X, Z)
 float guacamayaScale = 1.0f;
 float rotGuacamaya = 270.0f;
 float guacamayaAlaDer = 0.0f;
@@ -168,15 +151,12 @@ bool animarGuacamaya = false;
 float startTimeGuacamaya = 0.0f;
 bool teclaO_presionada = false;                                                                                                                   
 
-// -----------------------------------------
-//  ACUARIO (X,-Z)
-// -----------------------------------------
 
 // -----------------------------------------
 //  SABANA (-X,-Z)
 // -----------------------------------------
 
-//  ELEFANTE (Cuadrante -X, -Z)
+//  ELEFANTE ( -X, -Z)
 float rotElefante = 90.0f;
 float rotElefanteLado = 0.0f;
 float elefanteLegFL = 0.0f;
@@ -190,7 +170,7 @@ bool animarElefante = false;
 float startTimeElefante = 0.0f;
 bool teclaV_presionada = false;
 
-// JIRAFA (Cuadrante -X, -Z)
+// JIRAFA ( -X, -Z)
 float jirafaScale = 0.35f;
 float rotJirafa = 0.0f;
 float jirafaCabezaRot = 0.0f;
@@ -204,14 +184,14 @@ bool animarJirafa = false;
 float startTimeJirafa = 0.0f;
 bool teclaJ_presionada = false;
 
-// --- CEBRA (-X,-Z) ---
+// CEBRA (-X,-Z) 
 float cebraScale = 0.027f;
-float rotCebra = 180.0f; // Empieza mirando hacia abajo (-Z)
+float rotCebra = 180.0f;
 float cebraPataDelDer = 0.0f;
 float cebraPataDelIzq = 0.0f;
 float cebraPataTrasDer = 0.0f;
 float cebraPataTrasIzq = 0.0f;
-glm::vec3 cebraPos = glm::vec3(-2.8f, -0.4f, -3.5f); // Esquina cerca de la entrada
+glm::vec3 cebraPos = glm::vec3(-2.8f, -0.4f, -3.5f);
 bool animarCebra = false;
 float startTimeCebra = 0.0f;
 bool teclaL_presionada = false;
@@ -220,7 +200,7 @@ bool teclaL_presionada = false;
 //  DESIERTO (-X,Z)
 // -----------------------------------------
 
-//  CAMELLO (Cuadrante -X, Z)
+// CAMELLO ( -X, Z)
 float rotCamel = 180.0f;
 float camelLegFL = 0.0f;
 float camelLegFR = 0.0f;
@@ -235,7 +215,7 @@ float startTimeCamello = 0.0f;
 bool teclaC_presionada = false;
 
 
-//  TORTUGA (Cuadrante -X, Z)
+// TORTUGA ( -X, Z)
 float rotTortuga = 0.0f;
 float tortugaLegFL = 0.0f;
 float tortugaLegFR = 0.0f;
@@ -244,13 +224,6 @@ glm::vec3 tortugaPos = glm::vec3(-7.8f, -0.18f, 9.5f);
 bool animarTortuga = false;
 float startTimeTortuga = 0.0f;
 bool teclaX_presionada = false;
-// -----------------------------------------
-//  AVE (Cuadrante Central)
-// -----------------------------------------
-float rotAlaIzq = 0.0f;
-float rotAlaDer = 0.0f;
-float rotCabeza = 0.0f;
-glm::vec3 avePos = glm::vec3(0.0f, 1.0f, 0.0f); // Posición del ave en el centro
 
 //  CÓNDOR (Cuadrante -X, Z)
 float rotCondor = 90.0f;
@@ -261,6 +234,15 @@ float condorScale = 0.70f;
 glm::vec3 condorPos = glm::vec3(-6.7f, 0.5f, 6.0f);
 bool animarCondor = false;
 bool teclaZ_presionada = false;
+
+
+// -----------------------------------------
+//  AVE (Cuadrante Central)
+// -----------------------------------------
+float rotAlaIzq = 0.0f;
+float rotAlaDer = 0.0f;
+float rotCabeza = 0.0f;
+glm::vec3 avePos = glm::vec3(0.0f, 1.0f, 0.0f);
 
 
 // Vértices para el piso
@@ -313,10 +295,10 @@ float vertices[] = {
 
 // Vértices para PAREDES 
 float verticesPared[] = {
-	// Cara Trasera (-Z) - CORREGIDO: más repeticiones horizontales
+	// Cara Trasera (-Z)
 	-0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   0.0f, 0.0f,
-	 0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   15.0f, 0.0f,  // Aumentado de 3.0 a 10.0
-	 0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   15.0f, 5.0f,  // Aumentado de 3.0 a 10.0
+	 0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   15.0f, 0.0f,
+	 0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   15.0f, 5.0f,
 	 0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   15.0f, 5.0f,
 	-0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   0.0f, 5.0f,
 	-0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   0.0f, 0.0f,
@@ -365,8 +347,8 @@ glm::vec3 Light1 = glm::vec3(0);
 
 
 // Deltatime
-GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
-GLfloat lastFrame = 0.0f;  	// Time of last frame
+GLfloat deltaTime = 0.0f;
+GLfloat lastFrame = 0.0f;
 
 
 int main()
@@ -376,14 +358,13 @@ int main()
 	// =================================================================================
 
 	glfwInit();
-	// Set all the required options for GLFW
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-	// Create a GLFWwindow object that we can use for GLFW's functions
+	
 	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Proyecto Final", nullptr, nullptr);
 
 	if (nullptr == window)
@@ -395,16 +376,12 @@ int main()
 	}
 
 	glfwMakeContextCurrent(window);
-
 	glfwGetFramebufferSize(window, &SCREEN_WIDTH, &SCREEN_HEIGHT);
-
 	// Set the required callback functions
 	glfwSetKeyCallback(window, KeyCallback);
 	glfwSetCursorPosCallback(window, MouseCallback);
-
 	// GLFW Options
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
 	// Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
 	glewExperimental = GL_TRUE;
 	// Initialize GLEW to setup the OpenGL Function pointers
@@ -418,14 +395,13 @@ int main()
 	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
 
-
+	// Cargar shaders
 	Shader lightingShader("Shader/lighting.vs", "Shader/lighting.frag");
 	Shader lampShader("Shader/lamp.vs", "Shader/lamp.frag");
+	//Skybox
+	Shader skyboxShader("Shader/skybox.vs", "Shader/skybox.frag");
 
-	//Skybox
-	
-	//Skybox
-Shader skyboxShader("Shader/skybox.vs", "Shader/skybox.frag");
+
 // Vértices de cubo del skybox
 float skyboxVertices[] = {
 	-1.0f,  1.0f, -1.0f,
@@ -466,27 +442,70 @@ float skyboxVertices[] = {
 	 1.0f, -1.0f,  1.0f
 };
  
-	/* =================================================================================
-	 						CARGA DE MODELOS - Acuario (X,-Z)
-	 =================================================================================*/
-
 
 	// =================================================================================
 	// 						CARGA DE MODELO - Personaje camara
 	// =================================================================================
+
 	Model PersonajeAlex((char*)"Models/alex_leon/alex_leon.obj");
 
-	Model EscenarioAcuario((char*)"Models/Acuario/escenarioacuario.obj");
+	// =================================================================================
+	// 						CARGA DE MODELOS - ENTRADA // ADORNOS
+	// =================================================================================
+	
+	std::cout << "Cargando modelos entrada..." << std::endl;
 
-	// --- Cargar Pinguino ---
-	// (Asegúrate de crear la carpeta 'Models/Acuario/Pinguino/' y poner los .obj ahí)
+	Model LetreroZoo((char*)"Models/adornos/zooletre.obj");
+	
+	Model BancaModel((char*)"Models/adornos/banca.obj");
+
+	Model Taquilla((char*)"Models/taquilla/taquilla.obj");
+	glm::vec3 taquillaPos(3.5f, 0.4f, 14.5f);
+	glm::vec3 taquillaScale(3.5f, 3.0f, 3.5f);
+	float taquillaRot = 270.0f;
+
+	Model Kitty((char*)"Models/hellokitty/hellokitty.obj");
+	glm::vec3 kittyPos(-2.5f, 0.4f, 14.5f);
+	glm::vec3 kittyScale(1.5f, 1.5f, 1.5f);
+	float kittyRot = 270.0f;
+
+	Model Monito((char*)"Models/monito/monito.obj");
+	glm::vec3 monitoPos(-5.0f, 0.4f, 14.5f);
+	glm::vec3 monitoScale(1.5f, 1.5f, 1.5f);
+	float monitoRot = 270.0f;
+
+	Model CDMX((char*)"Models/cdmx/cdmx.obj");
+	glm::vec3 cdmxPos(-9.0f, 0.4f, 20.0f);
+	glm::vec3 cdmxScale(5.0f, 5.0f, 4.0f);
+	float cdmxRot = 270.0f;
+
+	Model Carrusel((char*)"Models/carrusel/carrusel.obj");
+	glm::vec3 carruselPos(9.0f, 1.0f, 19.0f);
+	glm::vec3 carruselScale(4.0f, 3.0f, 3.5f);
+	float carruselRot = 0.0f;
+
+	std::cout << "Modelos cargados entrada!" << std::endl;
+
+
+	/* =================================================================================
+	 						CARGA DE MODELOS - Acuario (X,-Z)
+	 =================================================================================*/
+	
+	std::cout << "Cargando modelos acuario..." << std::endl;
+	 // Acuario escenario
+	Model EscenarioAcuario((char*)"Models/Acuario/escenarioacuario.obj");
+	// IGLU
+	Model IgluModel((char*)"Models/Acuario/IGLU.obj");
+
+
+	// --- Pinguino ---
+
 	Model PinguCuerpo((char*)"Models/Acuario/cuerpopinguno.obj");
 	Model PinguPataDer((char*)"Models/Acuario/pataderechapingu.obj");
 	Model PinguPataIzq((char*)"Models/Acuario/pataizquierdapingu.obj");
 	Model PinguAletaDer((char*)"Models/Acuario/aletaderechapingu.obj");
 	Model PinguAletaIzq((char*)"Models/Acuario/aletaizquierdapingu.obj");
-	// IGLU
-	Model IgluModel((char*)"Models/Acuario/IGLU.obj");
+
 	// tortuga2Acuario
 	Model TortugaModel((char*)"Models/tortuga2/tortuga1.obj");
 	Model TortugaBody((char*)"Models/tortuga2/tortuga1cuerpo.obj");
@@ -494,6 +513,7 @@ float skyboxVertices[] = {
 	Model TortugaPataFR((char*)"Models/tortuga2/tortuga1patadelanteraderecha.obj");
 	Model TortugaPataBL((char*)"Models/tortuga2/tortuga1patatraseraizquierda.obj");
 	Model TortugaPataBR((char*)"Models/tortuga2/tortuga1patatraseraderecha.obj");
+
 	// --- Cargar Nutria ---
 	
 	Model NutriaBody((char*)"Models/nutriaacuario/nutriabody.obj");
@@ -503,11 +523,14 @@ float skyboxVertices[] = {
 	Model NutriaPataFR((char*)"Models/nutriaacuario/nutriapatadelanteraderecha.obj");
 	Model NutriaPataBL((char*)"Models/nutriaacuario/nutriapatatraseraizquierda.obj");
 	Model NutriaPataBR((char*)"Models/nutriaacuario/nutriapatatraseraderecha.obj");
-	// --- FIN NUEVO ---
+
+	std::cout << "Modelos cargados acuario!" << std::endl;
+
 	// =================================================================================
 	// 						CARGA DE MODELOS - Selva (X,Z)
 	// =================================================================================
-
+	
+	std::cout << "Cargando modelos selva..." << std::endl;
 	// ====== ESCENARIO ======
 	Model ArbolSelva((char*)"Models/arbolSelva/arbolSelva.obj");
 	glm::vec3 arbolSelvaPos(11.0f, -0.5f, 3.1f);
@@ -606,12 +629,13 @@ float skyboxVertices[] = {
 	Model Ave_AlaDer((char*)"Models/aveSelva/alaDerAve.obj");
 	Model Ave_AlaIzq((char*)"Models/aveSelva/alaIzqAve.obj");
 
+	std::cout << "Modelos cargados selva!" << std::endl;
+
 	// =================================================================================
 	// 						CARGA DE MODELOS - DESIERTO (-X,Z)
 	// =================================================================================
-	std::cout << "Cargando modelos..." << std::endl;
+	std::cout << "Cargando modelos desierto..." << std::endl;
 
-	//  ************ Codigo comentado para no cargar todo desde el inicio se descomenta al final *******
 
 	// ====== ESCENARIO ======
 	Model Oasis((char*)"Models/oasis/oasis.obj");
@@ -635,7 +659,7 @@ float skyboxVertices[] = {
 	glm::vec3 cactusScale(0.04f, 0.04f, 0.04f);
 	float cactusRot = 0.0f;
 
-		// ====== CAMELLO ======
+	// ====== CAMELLO ======
 	Model CamelBody((char*)"Models/camello/CamelBody.obj");
 	Model CamelHead((char*)"Models/camello/CamelCabeza.obj");
 	Model CamelLeg_FL((char*)"Models/camello/CamelPataizqEnfr.obj");
@@ -649,14 +673,13 @@ float skyboxVertices[] = {
 	Model TortugaLeg_FR1((char*)"Models/tortuga/tortuga_pata_der.obj");
 
 
-
 	// ====== CÓNDOR ======
 	Model CondorBody((char*)"Models/condor/condor_cuerpo.obj");
 	Model CondorHead((char*)"Models/condor/condor_cabeza.obj");
 	Model CondorAla_Der((char*)"Models/condor/condor_ala_der.obj");
 	Model CondorAla_Izq((char*)"Models/condor/condor_ala_izq.obj");
 
-	std::cout << "Modelos cargados!" << std::endl;
+	std::cout << "Modelos cargados desierto!" << std::endl;
 
 
 	// =================================================================================
@@ -673,29 +696,31 @@ float skyboxVertices[] = {
 	Model AveAlaDer((char*)"Models/Aviario/aladerechaave1.obj");
 	Model AvePatas((char*)"Models/Aviario/patasave1.obj");
 	Model AveCola((char*)"Models/Aviario/colaave1.obj");
-	// =================================================================================
-	// 						CARGA DE MODELOS - ENTRADA // ADORNOS
-	// =================================================================================
-	Model LetreroZoo((char*)"Models/adornos/zooletre.obj");
-	Model BancaModel((char*)"Models/adornos/banca.obj");
+
+
+
 	// =================================================================================
 	// 						CARGA DE MODELOS - Sabana (-X,-Z)
 	// =================================================================================
 
+	std::cout << "Cargando modelos sabana..." << std::endl;
+
+	// ====== ESCENARIO ======
+	
+	//ROCA
 	Model ArbolSabana((char*)"Models/arbolSabana/arbol.obj");
 	glm::vec3 arbolSabanaPos(-11.0f, 1.0f, -3.2f);
 	glm::vec3 arbolSabanaScale(3.5f, 3.5f, 3.5f);
 	float arbolSabanaRot = 0.0f;
-	// ====== ESCENARIO ======
-
+	
 	// ROCA
 	Model Roca((char*)"Models/roca/roca.obj");
 	glm::vec3 RocaPos(-7.25f, -0.5f, -11.8f);
 	glm::vec3 RocaEScale(0.06f, 0.06f, 0.06f);
 	float RocaRot = 270.0f;
 
+
 	//ELEFANTE
-	 
 	Model ElefanteBody((char*)"Models/elefante/elefante_cuerpo.obj");
 	Model ElefanteTrompa((char*)"Models/elefante/elefante_trompa.obj");
 	Model ElefanteLeg_FL((char*)"Models/elefante/elefante_pata_izq_enfr.obj");
@@ -704,7 +729,6 @@ float skyboxVertices[] = {
 	Model ElefanteLeg_BR((char*)"Models/elefante/elefante_pata_der_atras.obj");
 	
 	//JIRAFA
-
 	Model Jirafa_Cabeza((char*)"Models/jirafa/cabezaJirafa.obj");
 	Model Jirafa_Cola((char*)"Models/jirafa/colaJirafa.obj");
 	Model Jirafa_Cuerpo((char*)"Models/jirafa/cuerpoJirafa.obj");
@@ -720,42 +744,13 @@ float skyboxVertices[] = {
 	Model Cebra_PataTrasDer((char*)"Models/cebra/cebra_pata_der_atras.obj");
 	Model Cebra_PataTrasIzq((char*)"Models/cebra/cebra_pata_izq_atras.obj");
 
-	// =================================================================================
-    // 						CARGA DE MODELOS - ENTRADA
-	// =================================================================================
+	std::cout << "Modelos cargados sabana!" << std::endl;
 
-	Model Taquilla((char*)"Models/taquilla/taquilla.obj");
-	glm::vec3 taquillaPos(3.5f, 0.4f, 14.5f);
-	glm::vec3 taquillaScale(3.5f, 3.0f, 3.5f);
-	float taquillaRot = 270.0f;
-
-	Model Kitty((char*)"Models/hellokitty/hellokitty.obj");
-	glm::vec3 kittyPos(-2.5f, 0.4f, 14.5f);
-	glm::vec3 kittyScale(1.5f, 1.5f, 1.5f);
-	float kittyRot = 270.0f;
-
-	Model Monito((char*)"Models/monito/monito.obj");
-	glm::vec3 monitoPos(-5.0f, 0.4f, 14.5f);
-	glm::vec3 monitoScale(1.5f, 1.5f, 1.5f);
-	float monitoRot = 270.0f;
-
-	Model CDMX((char*)"Models/cdmx/cdmx.obj");
-	glm::vec3 cdmxPos(-9.0f, 0.4f, 20.0f);
-	glm::vec3 cdmxScale(5.0f, 5.0f, 4.0f);
-	float cdmxRot = 270.0f;
-
-	Model Carrusel((char*)"Models/carrusel/carrusel.obj");
-	glm::vec3 carruselPos(9.0f, 1.0f, 19.0f);
-	glm::vec3 carruselScale(4.0f, 3.0f, 3.5f);
-	float carruselRot = 0.0f;
 
 	// =================================================================================
 	// 						Carga de Texturas para los pisos
 	// =================================================================================
 
-
-	// PARA ESTA PARTE YA HAY UNA FUNCION LA CUAL ES ConfigurarTexturaRepetible para que la usen
-	// y no tengan que poner todo el codigo repetido ConfigurarTexturaRepetible(variablePiso);
 
 	// ***TEXTURA GENERAL PARA EL PISO GENERAL***
 	GLuint pisoTextureID = TextureFromFile("images/ladrillo.png", ".");
@@ -768,13 +763,16 @@ float skyboxVertices[] = {
 	// *** TEXTURA PARA LAS PAREDES ***
 	GLuint paredTextureID = TextureFromFile("images/muro.jpg", ".");
 	ConfigurarTexturaRepetible(paredTextureID);
+	//Altura de la pared
+	float alturaPared = 3.0f;
+	// Escala general del área
+	float tamanoBase = 25.0f;
 
 	// *** TEXTURA PARA EL PISO ACUARIO ***
 	GLuint pisoAcuarioTextureID = TextureFromFile("images/acuario.jpg", ".");
 	ConfigurarTexturaRepetible(pisoAcuarioTextureID);
-	// *** TEXTURA PARA EL PISO ACUARIO (DIVIDIDO) ***
 
-	//
+	// *** TEXTURA PARA EL PISO ACUARIO (DIVIDIDO) ***
 	GLuint pisoPiedraTextureID = TextureFromFile("images/rocacafe.jpg", ".");
 	ConfigurarTexturaRepetible(pisoPiedraTextureID);
 
@@ -794,10 +792,7 @@ float skyboxVertices[] = {
 	GLuint pisoArenaTextureID = TextureFromFile("images/sand.jpg", ".");
 	ConfigurarTexturaRepetible(pisoArenaTextureID);
 
-	// Altura de la pared
-	float alturaPared = 3.0f;
-	// Escala general del área
-	float tamanoBase = 25.0f;
+
 
 	glm::mat4 projection = glm::perspective(camera.GetZoom(), (GLfloat)SCREEN_WIDTH / (GLfloat)SCREEN_HEIGHT, 0.1f, 100.0f);
 
@@ -821,22 +816,24 @@ float skyboxVertices[] = {
 	ConfigurarVAO(VAO_Entrada, VBO_Entrada, vertices, sizeof(vertices));
 
 	//SKYBOX
-GLuint skyboxVBO, skyboxVAO;
-glGenVertexArrays(1, &skyboxVAO);
-glGenBuffers(1, &skyboxVBO);
-glBindVertexArray(skyboxVAO);
-glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-glEnableVertexAttribArray(0);
-glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-vector <const GLchar*> faces;
-faces.push_back("images/skybox/right.jpg");
-faces.push_back("images/skybox/left.jpg");
-faces.push_back("images/skybox/top.jpg");
-faces.push_back("images/skybox/bottom.jpg");
-faces.push_back("images/skybox/back.jpg");
-faces.push_back("images/skybox/front.jpg");
-GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
+	GLuint skyboxVBO, skyboxVAO;
+	glGenVertexArrays(1, &skyboxVAO);
+	glGenBuffers(1, &skyboxVBO);
+	glBindVertexArray(skyboxVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+
+	// Cargar las 6 caras del cubo del skybox
+	vector <const GLchar*> faces;
+	faces.push_back("images/skybox/right.jpg");
+	faces.push_back("images/skybox/left.jpg");
+	faces.push_back("images/skybox/top.jpg");
+	faces.push_back("images/skybox/bottom.jpg");
+	faces.push_back("images/skybox/back.jpg");
+	faces.push_back("images/skybox/front.jpg");
+	GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 
 	// =================================================================================
 	// 								CICLO DE RENDERIZADO
@@ -853,24 +850,15 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
 		glfwPollEvents();
 		DoMovement();
-
 		// Clear the colorbuffer
 		glClearColor(0.6f, 0.7f, 0.9f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 		// OpenGL options
 		glEnable(GL_DEPTH_TEST);
 
 
-
-		//Load Model
-
-
 		// Use cooresponding shader when setting uniforms/drawing objects
 		lightingShader.Use();
-
-		//glUniform1i(glGetUniformLocation(lightingShader.Program, "diffuse"), 0); // Esta línea estaba causando problemas
-		//glUniform1i(glGetUniformLocation(lightingShader.Program, "specular"),1);
 
 		GLint viewPosLoc = glGetUniformLocation(lightingShader.Program, "viewPos");
 		glUniform3f(viewPosLoc, camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
@@ -932,11 +920,11 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		glm::mat4 model = glm::mat4(1.0f);
 		glm::mat4 modelTemp = glm::mat4(1.0f);
 
-		// ---------------------------------------------------------------------------------
-		// 							CARGA DE TEXTURAS
-		// ---------------------------------------------------------------------------------
+		
+		lightingShader.Use();
 
-		//... (código de texturas comentado) ...
+
+		// CARGA DE TEXTURAS
 
 
 		// ---------------------------------------------------------------------------------
@@ -944,8 +932,6 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		// ---------------------------------------------------------------------------------
 
 		// DIBUJO DEL PISO GENERAL LADRILLO
-
-		lightingShader.Use();
 		DibujarPiso(pisoTextureID, glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(25.0f, 0.1f, 25.0f), VAO_Cubo, modelLoc);
 
 		// DIBUJO DEL PASTO ENTRADA
@@ -954,16 +940,102 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		// =================================================================================
 		// 							DIBUJO DE MODELOS - ENTRADA
 		// =================================================================================
+		
+		// Letrero ZOO
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(4.1f, 2.8f, 8.8f));
 		model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 		model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); 
 		model = glm::scale(model, glm::vec3(0.8f, 0.8f, 0.8f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		LetreroZoo.Draw(lightingShader);
 
+		// --- TAQUILLA ---
+		model = glm::mat4(1);
+		model = glm::translate(model, taquillaPos);
+		model = glm::scale(model, taquillaScale);
+		model = glm::rotate(model, glm::radians(taquillaRot), glm::vec3(0.0f, 1.0f, 0.0f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		LetreroZoo.Draw(lightingShader);
+		Taquilla.Draw(lightingShader);
+
+		// --- HELLO KITTY ---
+		model = glm::mat4(1);
+		model = glm::translate(model, kittyPos);
+		model = glm::scale(model, kittyScale);
+		model = glm::rotate(model, glm::radians(kittyRot), glm::vec3(0.0f, 1.0f, 0.0f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		LetreroZoo.Draw(lightingShader);
+		Kitty.Draw(lightingShader);
+
+		// --- MONITO ---
+		model = glm::mat4(1);
+		model = glm::translate(model, monitoPos);
+		model = glm::scale(model, monitoScale);
+		model = glm::rotate(model, glm::radians(monitoRot), glm::vec3(0.0f, 1.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Monito.Draw(lightingShader);
+
+		// --- CDMX ---
+		model = glm::mat4(1);
+		model = glm::translate(model, cdmxPos);
+		model = glm::scale(model, cdmxScale);
+		model = glm::rotate(model, glm::radians(cdmxRot), glm::vec3(0.0f, 1.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		CDMX.Draw(lightingShader);
+
+		// --- CARRUSEL ---
+		model = glm::mat4(1);
+		model = glm::translate(model, carruselPos);
+		model = glm::scale(model, carruselScale);
+		model = glm::rotate(model, glm::radians(carruselRot), glm::vec3(0.0f, 1.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Carrusel.Draw(lightingShader);
+
+
+		// =================================================================================
+		// 							DIBUJO DE PAREDES
+		// =================================================================================
+
+			// Pared trasera (Z negativa)
+		DibujarPiso(paredTextureID, glm::vec3(0.0f, alturaPared / 2 - 0.5f, -tamanoBase / 2),
+			glm::vec3(tamanoBase, alturaPared, 0.2f), VAO_Pared, modelLoc);
+
+		// Pared izquierda (X negativa)
+		DibujarPiso(paredTextureID, glm::vec3(-tamanoBase / 2, alturaPared / 2 - 0.5f, 0.0f),
+			glm::vec3(0.2f, alturaPared, tamanoBase), VAO_Pared, modelLoc);
+
+		// Pared derecha (X positiva)
+		DibujarPiso(paredTextureID, glm::vec3(tamanoBase / 2, alturaPared / 2 - 0.5f, 0.0f),
+			glm::vec3(0.2f, alturaPared, tamanoBase), VAO_Pared, modelLoc);
+
+		// Pared de entrada - Lado IZQUIERDO
+		DibujarPiso(paredTextureID, glm::vec3(-7.15f, alturaPared / 2 - 0.5f, 12.5f),
+			glm::vec3(10.50f, alturaPared, 0.2f), VAO_Pared, modelLoc);
+
+		// Pared de entrada - Lado DERECHO
+		DibujarPiso(paredTextureID, glm::vec3(7.15f, alturaPared / 2 - 0.5f, 12.5f),
+			glm::vec3(10.50f, alturaPared, 0.2f), VAO_Pared, modelLoc);
+
+		// Dibujar personaje en tercera persona
+		if (camera.GetCameraType() == THIRD_PERSON)
+		{
+			glm::vec3 personPos = camera.GetPosition();
+
+			//Calcular rotación basada en la dirección de la cámara
+			glm::vec3 cameraFront = camera.GetFront();
+			float yawAngle = glm::degrees(atan2(cameraFront.x, cameraFront.z)); // Ángulo en grados
+
+			model = glm::mat4(1);
+			model = glm::translate(model, glm::vec3(personPos.x, personPos.y - 1.4f, personPos.z));
+
+			//Rotar según la dirección de la cámara
+			model = glm::rotate(model, glm::radians(yawAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+
+			model = glm::scale(model, glm::vec3(0.02f, 0.02f, 0.02f));
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+			PersonajeAlex.Draw(lightingShader);
+		}
+
 
 		// =================================================================================
 		// 							DIBUJO DE MODELOS - BANCAS
@@ -991,87 +1063,30 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		model = glm::scale(model, glm::vec3(6.0f, 6.0f, 6.0f)); 
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		BancaModel.Draw(lightingShader);
-		// --- FIN DE BANCAS ---
 	
-		
-		//Dibujo de las paredes 
-		
-		// Pared trasera (Z negativa)
-		DibujarPiso(paredTextureID, glm::vec3(0.0f, alturaPared / 2 - 0.5f, -tamanoBase / 2),
-			glm::vec3(tamanoBase, alturaPared, 0.2f), VAO_Pared, modelLoc);
 
-
-
-		// Pared izquierda (X negativa)
-		DibujarPiso(paredTextureID, glm::vec3(-tamanoBase / 2, alturaPared / 2 - 0.5f, 0.0f),
-			glm::vec3(0.2f, alturaPared, tamanoBase), VAO_Pared, modelLoc);
-
-		// Pared derecha (X positiva)
-		DibujarPiso(paredTextureID, glm::vec3(tamanoBase / 2, alturaPared / 2 - 0.5f, 0.0f),
-			glm::vec3(0.2f, alturaPared, tamanoBase), VAO_Pared, modelLoc);
-
-		// Pared de entrada - Lado IZQUIERDO (EXTENDIDA HASTA LA ESQUINA)
-		// Va desde X=-12.5 (esquina) hasta X=-3.0 (dejando espacio para la entrada)
-		DibujarPiso(paredTextureID, glm::vec3(-7.15f, alturaPared / 2 - 0.5f, 12.5f),
-			glm::vec3(10.50f, alturaPared, 0.2f), VAO_Pared, modelLoc);
-
-		// Pared de entrada - Lado DERECHO (EXTENDIDA HASTA LA ESQUINA)
-		// Va desde X=3.0 hasta X=12.5 (esquina)
-		DibujarPiso(paredTextureID, glm::vec3(7.15f, alturaPared / 2 - 0.5f, 12.5f),
-			glm::vec3(10.50f, alturaPared, 0.2f), VAO_Pared, modelLoc);
-
-		// Dibujar personaje en tercera persona
-		if (camera.GetCameraType() == THIRD_PERSON)
-		{
-			glm::vec3 personPos = camera.GetPosition();
-
-			// --- Calcular rotación basada en la dirección de la cámara ---
-			glm::vec3 cameraFront = camera.GetFront();
-			float yawAngle = glm::degrees(atan2(cameraFront.x, cameraFront.z)); // Ángulo en grados
-
-			model = glm::mat4(1);
-			model = glm::translate(model, glm::vec3(personPos.x, personPos.y - 1.4f, personPos.z));
-
-			// --Rotar según la dirección de la cámara ---
-			model = glm::rotate(model, glm::radians(yawAngle), glm::vec3(0.0f, 1.0f, 0.0f));
-
-			model = glm::scale(model, glm::vec3(0.02f, 0.02f, 0.02f));
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-			PersonajeAlex.Draw(lightingShader);
-		}
+	
 
 
 		// ---------------------------------------------------------------------------------
 		// 							DIBUJO DE ESCENARIO ACUARIO (x,-z)
 		// ---------------------------------------------------------------------------------
 
-		
-		// **** DIBUJOS DEL PISO Y ACCESORIOS DE ACUARIO ****
-		// El cuadrante total es: centro(7.25f, -0.49f, -7.25f), escala(10.5f, 0.1f, 10.5f)
-
 		// 1. Mitad trasera (Piedra)
-		
-		
 		DibujarPiso(pisoPiedraTextureID, glm::vec3(7.25f, -0.49f, -9.875f), glm::vec3(10.5f, 0.1f, 5.25f), VAO_Cubo, modelLoc);
-
 		// 2. Mitad delantera (Agua)
-		
 		DibujarPiso(pisoAguaTextureID, glm::vec3(7.25f, -0.49f, -4.625f), glm::vec3(10.5f, 0.1f, 5.25f), VAO_Cubo, modelLoc);
 
-
-		// ---  DIBUJAR EL FONDO DEL ACUARIO ---
+		// --- FONDO DEL ACUARIO ---
 		model = glm::mat4(1.0f);
-		// El centro X del cuadrante es 7.25f
-		// El fondo Z del cuadrante es -7.25f - (10.5f / 2) = -12.5f
 		model = glm::translate(model, glm::vec3(5.25f, -0.5f, -12.5f)); 
 		model = glm::scale(model, glm::vec3(2.2f, 2.0f, 1.5f)); 
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
 		EscenarioAcuario.Draw(lightingShader);
-		// --- DIBUJAR TORTUGA ACUARIO ---
 
-		// Shell (Cáscara/Cuerpo principal)
+
+		// ---TORTUGA ACUARIO ---
+		// Cuerpo principal
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, tortugaAcuarioPos); 
 		model = glm::rotate(model, glm::radians(tortugaAcuarioRotY), glm::vec3(0.0f, 1.0f, 0.0f)); 
@@ -1081,7 +1096,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model)); 
 		TortugaModel.Draw(lightingShader);
 
-		// Body (Cabeza y cuello)
+		//Cabeza y cuello
 		glm::vec3 pivoteTortugaHead(0.0f, 0.1f, 0.2f); 
 		model = modelTemp;
 		model = glm::translate(model, pivoteTortugaHead);
@@ -1091,7 +1106,6 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		TortugaBody.Draw(lightingShader);
 
 		// Pata Delantera Izquierda
-		
 		glm::vec3 pivoteTortugaFL(0.2f, 0.0f, 0.1f); 
 		model = modelTemp;
 		model = glm::translate(model, pivoteTortugaFL);
@@ -1101,7 +1115,6 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		TortugaPataFL.Draw(lightingShader);
 
 		// Pata Delantera Derecha
-		
 		glm::vec3 pivoteTortugaFR(-0.2f, 0.0f, 0.1f); 
 		model = modelTemp;
 		model = glm::translate(model, pivoteTortugaFR);
@@ -1111,7 +1124,6 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		TortugaPataFR.Draw(lightingShader);
 
 		// Pata Trasera Izquierda
-		
 		glm::vec3 pivoteTortugaBL(0.15f, 0.0f, -0.2f); 
 		model = modelTemp;
 		model = glm::translate(model, pivoteTortugaBL);
@@ -1121,7 +1133,6 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		TortugaPataBL.Draw(lightingShader);
 
 		// Pata Trasera Derecha
-		
 		glm::vec3 pivoteTortugaBR(-0.15f, 0.0f, -0.2f); 
 		model = modelTemp;
 		model = glm::translate(model, pivoteTortugaBR);
@@ -1129,28 +1140,23 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		model = glm::translate(model, -pivoteTortugaBR);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		TortugaPataBR.Draw(lightingShader);
-		// --- FIN BLOQUE TORTUGA ---
+
 		
-		// --- ¡NUEVO! DIBUJAR NUTRIA ---
+		// NUTRIA
 		
+		// Cuerpo principal
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, nutriaPos);
-		model = glm::rotate(model, glm::radians(nutriaRotY), glm::vec3(0.0f, 1.0f, 0.0f)); // Dirección
+		model = glm::rotate(model, glm::radians(nutriaRotY), glm::vec3(0.0f, 1.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(nutriaScale));
-
-		// Aplicamos el giro del clavado (rotNutriaCuerpoX) a la matriz 'model'
-		// ANTES de guardarla en modelTemp. Así, todas las partes heredarán el giro.
 		model = glm::rotate(model, glm::radians(rotNutriaCuerpoX), glm::vec3(1.0f, 0.0f, 0.0f));
-		
-		modelTemp = model; // Guardar matriz base (AHORA CON EL GIRO DEL CLAVADO)
-		
-		// Dibujar Cuerpo
+		modelTemp = model;
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		NutriaBody.Draw(lightingShader);
 
 		// Cabeza
-		glm::vec3 pivoteNutriaHead(0.0f, 0.2f, 0.3f); // <-- ¡AJUSTA ESTE PIVOTE!
-		model = modelTemp; // Usa la matriz base (CON giro)
+		glm::vec3 pivoteNutriaHead(0.0f, 0.2f, 0.3f);
+		model = modelTemp;
 		model = glm::translate(model, pivoteNutriaHead);
 		model = glm::rotate(model, glm::radians(rotNutriaHead), glm::vec3(0.0f, 1.0f, 0.0f));
 		model = glm::translate(model, -pivoteNutriaHead);
@@ -1158,19 +1164,16 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		NutriaHead.Draw(lightingShader);
 
 		// Cola
-		glm::vec3 pivoteNutriaCola(0.0f, 0.1f, -0.4f); // <-- ¡AJUSTA ESTE PIVOTE!
+		glm::vec3 pivoteNutriaCola(0.0f, 0.1f, -0.4f);
 		model = modelTemp;
 		model = glm::translate(model, pivoteNutriaCola);
 		model = glm::rotate(model, glm::radians(rotNutriaCola), glm::vec3(1.0f, 0.0f, 0.0f));
 		model = glm::translate(model, -pivoteNutriaCola);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		NutriaCola.Draw(lightingShader);
-		
-		// --- ¡MODIFICADO! (Arreglo 1: Patas desfasadas) ---
-		// Subí el valor Y (segundo número) de los pivotes para pegarlos al cuerpo.
-		
+
 		// Pata Delantera Izquierda
-		glm::vec3 pivoteNutriaFL(0.1f, 0.6f, 0.2f); // <-- ¡AJUSTA! (Subí Y de 0.3 a 0.4)
+		glm::vec3 pivoteNutriaFL(0.1f, 0.6f, 0.2f);
 		model = modelTemp;
 		model = glm::translate(model, pivoteNutriaFL);
 		model = glm::rotate(model, glm::radians(rotNutriaFL), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -1179,7 +1182,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		NutriaPataFL.Draw(lightingShader);
 
 		// Pata Delantera Derecha
-		glm::vec3 pivoteNutriaFR(-0.1f, 0.6f, 0.2f); // <-- ¡AJUSTA! (Subí Y de 0.3 a 0.4)
+		glm::vec3 pivoteNutriaFR(-0.1f, 0.6f, 0.2f);
 		model = modelTemp;
 		model = glm::translate(model, pivoteNutriaFR);
 		model = glm::rotate(model, glm::radians(rotNutriaFR), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -1188,7 +1191,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		NutriaPataFR.Draw(lightingShader);
 
 		// Pata Trasera Izquierda
-		glm::vec3 pivoteNutriaBL(0.1f, 0.3f, -0.3f); // <-- (Y es 0.3)
+		glm::vec3 pivoteNutriaBL(0.1f, 0.3f, -0.3f);
 		model = modelTemp;
 		model = glm::translate(model, pivoteNutriaBL);
 		model = glm::rotate(model, glm::radians(rotNutriaBL), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -1197,25 +1200,21 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		NutriaPataBL.Draw(lightingShader);
 
 		// Pata Trasera Derecha
-		glm::vec3 pivoteNutriaBR(-0.1f, 0.3f, -0.3f); // <-- (Y es 0.3)
+		glm::vec3 pivoteNutriaBR(-0.1f, 0.3f, -0.3f);
 		model = modelTemp;
 		model = glm::translate(model, pivoteNutriaBR);
 		model = glm::rotate(model, glm::radians(rotNutriaBR), glm::vec3(1.0f, 0.0f, 0.0f));
 		model = glm::translate(model, -pivoteNutriaBR);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		NutriaPataBR.Draw(lightingShader);
-		// --- FIN BLOQUE NUTRIA ---
-		// --- DIBUJO IGLU ---
+
+		//IGLU
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(11.2f, -0.4f, -9.0f));
 		model = glm::rotate(model, glm::radians(220.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(0.7f, 0.7f, 0.7f));  
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		IgluModel.Draw(lightingShader);
-
-
-	
-
 
 
 		// ---------------------------------------------------------------------------------
@@ -1405,13 +1404,13 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		{
 			float t = glfwGetTime() - startTimeCapibara;
 
-			// FASE 1: CAMINANDO (10 segundos)
+			// CAMINANDO (10 segundos)
 			if (t < 10.0f)
 			{
 				float totalDist = 7.0f;
 				capibaraPos.x = 11.0f - (t * (totalDist / 10.0f));
 
-				// Movimiento de patas (caminata de cuadrúpedo)
+				// Movimiento de patas
 				float paso = sin(t * 6.0f);
 				capibaraPataDelDer = paso * 1.5f;
 				capibaraPataTrasDer = paso * 1.5f;
@@ -1424,13 +1423,13 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				capibaraCabezaRot = 0.0f;
 				rotCapibara = 180.0f;
 			}
-			// FASE 2: DETENIDO, COMIENDO (6 segundos)
+			// DETENIDO, COMIENDO (6 segundos)
 			else if (t < 16.0f)
 			{
 				float t2 = t - 10.0f;
 				capibaraPos.x = 4.0f;
 
-				// Patas deteniéndose gradualmente
+				// Patas deteniéndose
 				capibaraPataDelDer = sin(t2 * 0.5f) * 2.0f;
 				capibaraPataDelIzq = -capibaraPataDelDer;
 				capibaraPataTrasDer = -capibaraPataDelDer;
@@ -1442,7 +1441,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				capibaraCabezaRot = 0.0f;
 				rotCapibara = 180.0f;
 			}
-			// FASE 3: QUIETO
+			//QUIETO
 			else
 			{
 				capibaraPos.x = 4.0f;
@@ -1453,6 +1452,8 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				rotCapibara = 180.0f;
 			}
 		}
+
+
 
 		// **** DIBUJO DEL MONO ****
 		model = glm::mat4(1);
@@ -1513,7 +1514,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		{
 			float t = glfwGetTime() - startTimeMono;
 
-			// FASE 1: PRIMER BRINCO (1.5 segundos)
+			// PRIMER BRINCO (1.5 segundos)
 			if (t < 1.5f)
 			{
 				float saltoCiclo = abs(sin(t * 2.094f));
@@ -1540,7 +1541,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				monoColaRot = 0.5f;
 				rotMono = 180.0f;
 			}
-			// FASE 2: SEGUNDO BRINCO (1.5 segundos)
+			// SEGUNDO BRINCO (1.5 segundos)
 			else if (t < 3.2f)
 			{
 				float t2 = t - 1.7f;
@@ -1568,7 +1569,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				monoColaRot = 0.5f;
 				rotMono = 180.0f;
 			}
-			// FASE 3: TERCER BRINCO (1.5 segundos)
+			// TERCER BRINCO (1.5 segundos)
 			else if (t < 4.9f)
 			{
 				float t3 = t - 3.4f;
@@ -1586,7 +1587,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				monoColaRot = 2.0f + (saltoCiclo * 1.5f);
 				rotMono = 180.0f;
 			}
-			// FASE 4: CAMINANDO (1 segundo)
+			//CAMINANDO (1 segundo)
 			else if (t < 5.9f)
 			{
 				float t4 = t - 4.9f;
@@ -1604,7 +1605,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				monoColaRot = sin(t4 * 2.0f) * 2.0f;
 				rotMono = 180.0f;
 			}
-			// FASE 5: QUIETO
+			// QUIETO
 
 			else
 			{
@@ -1649,7 +1650,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		{
 			float t = glfwGetTime() - startTimeGuacamaya;
 
-			// FASE 1: Volando (8 segundos)
+			//Volando (8 segundos)
 			if (t < 8.0f)
 			{
 				// Vuelo en línea recta
@@ -1663,7 +1664,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				guacamayaAlaIzq = -aleteo * 5.0f;
 				rotGuacamaya = 270.0f;
 			}
-			// FASE 2: Descendiendo hacia la rama (4 segundos)
+			//Descendiendo hacia la rama (4 segundos)
 			else if (t < 12.0f)
 			{
 				float t2 = t - 8.0f;
@@ -1676,7 +1677,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				guacamayaAlaIzq = -3.0f;
 				rotGuacamaya = 270.0f;
 			}
-			// FASE 3: Posada en la rama
+			//Posada en la rama
 			else
 			{
 				guacamayaPos.x = 3.0f;
@@ -1713,19 +1714,17 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 
 		// **** DIBUJO DE ANIMALES SABANA ****
 
-
 		//ELEFANTE
-
 		model = glm::mat4(1);
 		model = glm::translate(model, elefantePos);
-		model = glm::rotate(model, glm::radians(rotElefante), glm::vec3(0.0f, 1.0f, 0.0f));  // Rotación en Y
-		model = glm::rotate(model, glm::radians(rotElefanteLado), glm::vec3(0.0f, 0.0f, 1.0f));  // NUEVA: Rotación lateral (acostarse)
+		model = glm::rotate(model, glm::radians(rotElefante), glm::vec3(0.0f, 1.0f, 0.0f)); 
+		model = glm::rotate(model, glm::radians(rotElefanteLado), glm::vec3(0.0f, 0.0f, 1.0f));
 		model = glm::scale(model, glm::vec3(elefanteScale));
 		modelTemp = model;
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		ElefanteBody.Draw(lightingShader);
 
-		// Trompa (con rotación en X para moverla arriba/abajo)
+		// Trompa
 		glm::vec3 elefantePivotTrompa(0.0f, 1.0f, 0.5f);
 		model = modelTemp;
 		model = glm::translate(model, elefantePivotTrompa);
@@ -1776,10 +1775,10 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		{
 			float t = glfwGetTime() - startTimeElefante;
 
-			// FASE 1: CAMINANDO (0s - 8s)
+			// CAMINANDO (0s - 8s)
 			if (t < 8.0f)
 			{
-				// Movimiento en EJE X (de -11 a -6)
+				// Movimiento en EJE X
 				float totalDist = 5.0f;
 				elefantePos.x = -11.0f + (t * (totalDist / 8.0f));
 
@@ -1790,7 +1789,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				elefanteLegFR = -paso * 10.0f;
 				elefanteLegBL = -paso * 15.0f;
 
-				// Trompa en movimiento natural
+				// Trompa
 				elefanteTrompa = sin(t * 0.5f) * 5.0f;
 				rotElefante = 90.0f;
 				rotElefanteLado = 0.0f;
@@ -1798,20 +1797,18 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				elefantePos.z = -10.5f;  
 			}
 
-			// FASE 2: SE ACUESTA DE LADO (8s - 12s)
+			//SE ACUESTA DE LADO
 			else if (t < 12.0f)
 			{
 				float t2 = t - 8.0f;
 				elefantePos.x = -6.0f;
 				elefantePos.z = -10.5f; 
 
-				// Rotación lateral se acuesta de lado
+				// Rotación lateral
 				rotElefanteLado = t2 * 22.5f;
-
-				// SUBE de -0.4 a 0.0 mientras se acuesta
 				elefantePos.y = -0.4f + (t2 * 0.1f);
 
-				// Patas se mantienen
+				// Patas
 				elefanteLegFL = 0.0f;
 				elefanteLegFR = 0.0f;
 				elefanteLegBL = 0.0f;
@@ -1822,11 +1819,11 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				rotElefante = 90.0f;
 			}
 
-			// FASE FINAL: ACOSTADO DE LADO
+			// ACOSTADO DE LADO
 			else
 			{
 				elefantePos.x = -6.0f;
-				elefantePos.z = -10.5f;  //  CAMBIADO: Posición final cerca de la pared
+				elefantePos.z = -10.5f;
 				elefantePos.y = 0.0f;
 				rotElefanteLado = 90.0f;
 
@@ -1910,21 +1907,21 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		{
 			float t = glfwGetTime() - startTimeJirafa;
 
-			// FASE 1: Caminando (4 segundos)
+			// Caminando (4 segundos)
 			if (t < 4.0f)
 			{
 				// Avanza 4 unidades en Z
 				float totalDist = 4.0f;
 				jirafaPos.z = -10.0f + (t * (totalDist / 4.0f));
 
-				// Ciclo de caminata (patas se mueven por pares)
+				// Ciclo de caminata
 				float paso = sin(t * 5.5f);
 				jirafaPataDelDer = paso * 2.5f;
 				jirafaPataTrasDer = paso * 2.5f;
 				jirafaPataDelIzq = -paso * 2.5f;
 				jirafaPataTrasIzq = -paso * 2.5f;
 
-				// Cabeza se balancea suavemente
+				// Cabeza se balancea
 				jirafaCabezaRot = sin(t * 0.5f) * 2.0f;
 
 				// Cola se mueve al caminar
@@ -1932,13 +1929,13 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 
 				rotJirafa = 0.0f;
 			}
-			// FASE 2: Comiendo hojas (4 segundos)
+			// FASE 2: Comiendo hojas
 			else if (t < 8.0f)
 			{
 				float t2 = t - 4.0f;
 				jirafaPos.z = -6.0f;
 
-				// Patas se detienen gradualmente
+				// Patas se detienen
 				jirafaPataDelDer = sin(t2 * 0.5f) * 0.5f;
 				jirafaPataDelIzq = -jirafaPataDelDer;
 				jirafaPataTrasDer = -jirafaPataDelDer;
@@ -1952,7 +1949,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 
 				rotJirafa = 0.0f;
 			}
-			// FASE 3: Quieta
+			//Quieta
 			else
 			{
 				jirafaPos.z = -6.0f;
@@ -1964,7 +1961,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 			}
 		}
 
-		// --- ¡NUEVO! **** DIBUJO DE LA CEBRA **** ---
+		//CEBRA
 		model = glm::mat4(1);
 		model = glm::translate(model, cebraPos);
 		model = glm::rotate(model, glm::radians(rotCebra), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -1974,7 +1971,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		Cebra_Cuerpo.Draw(lightingShader);
 
 		// Pata delantera derecha
-		glm::vec3 cebraPivotPataDelDer(0.3f, 0.8f, 0.4f); // Ajusta estos valores según tu modelo
+		glm::vec3 cebraPivotPataDelDer(0.3f, 0.8f, 0.4f);
 		model = modelTemp;
 		model = glm::translate(model, cebraPivotPataDelDer);
 		model = glm::rotate(model, glm::radians(cebraPataDelDer), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -2010,16 +2007,16 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		Cebra_PataTrasIzq.Draw(lightingShader);
 
 
-		// ---  CEBRA - ANIMACIÓN  ---
+		// CEBRA - ANIMACIÓN
 		if (animarCebra)
 		{
 			float t = glfwGetTime() - startTimeCebra;
 
-			// FASE 1: Caminar hacia abajo (Z: -3.5 → -10.0) - 7 segundos
+			//Caminar hacia abajo
 			if (t < 7.0f)
 			{
 				cebraPos.x = -2.8f;
-				float totalDist = 6.5f; // Distancia en Z (de -3.5 a -10.0)
+				float totalDist = 6.5f; // Distancia en Z 
 				cebraPos.z = -3.5f - (t * (totalDist / 7.0f)); // Avanza hacia -Z
 
 				// Ciclo de caminata
@@ -2031,7 +2028,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 
 				rotCebra = 180.0f;
 			}
-			// FASE 2: Girar hacia la izquierda 
+			// Girar hacia la izquierda 
 			else if (t < 8.0f)
 			{
 				float t2 = t - 7.0f;
@@ -2047,11 +2044,11 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				cebraPataTrasDer = 0.0f;
 				cebraPataTrasIzq = 0.0f;
 			}
-			// FASE 3: Caminar hacia la izquierda (X: -2.8 → -10.5) - 8 segundos
+			// FASE 3: Caminar hacia la izquierda
 			else if (t < 16.0f)
 			{
 				float t3 = t - 8.0f;
-				float totalDist = 7.7f; // Distancia en X (de -2.8 a -10.5)
+				float totalDist = 7.7f; // Distancia en X
 				cebraPos.x = -2.8f - (t3 * (totalDist / 8.0f)); // Avanza hacia -X
 				cebraPos.z = -10.0f;
 
@@ -2064,7 +2061,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 
 				rotCebra = 270.0f;
 			}
-			// FASE 4: Girar hacia arriba
+			// Girar hacia arriba
 			else if (t < 17.0f)
 			{
 				float t4 = t - 16.0f;
@@ -2080,7 +2077,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				cebraPataTrasDer = 0.0f;
 				cebraPataTrasIzq = 0.0f;
 			}
-			// FASE 5: Caminar hacia arriba (Z: -10.0 → -3.5) - 7 segundos
+			//Caminar hacia arriba
 			else if (t < 24.0f)
 			{
 				float t5 = t - 17.0f;
@@ -2094,17 +2091,16 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				cebraPataTrasDer = paso * 4.0f;
 				cebraPataDelIzq = -paso * 4.0f;
 				cebraPataTrasIzq = -paso * 4.0f;
-
 				rotCebra = 0.0f;
 			}
-			// FASE 6: Giro final hacia la derecha (1 segundo)
+			// Giro final hacia la derecha
 			else if (t < 25.0f)
 			{
 				float t6 = t - 24.0f;
 				cebraPos.x = -10.5f;
 				cebraPos.z = -3.5f;
 
-				// rotación de 0° a 90°
+				// rotación
 				rotCebra = t6 * 90.0f;
 
 				// Detener patas
@@ -2113,7 +2109,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				cebraPataTrasDer = 0.0f;
 				cebraPataTrasIzq = 0.0f;
 			}
-			// FASE 7: Caminar de regreso a la posición inicial (X: -10.5 → -2.8) - 8 segundos
+			//Caminar de regreso a la posición inicial
 			else if (t < 33.0f)
 			{
 				float t7 = t - 25.0f;
@@ -2127,10 +2123,9 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				cebraPataTrasDer = paso * 4.0f;
 				cebraPataDelIzq = -paso * .0f;
 				cebraPataTrasIzq = -paso * 4.0f;
-
-				rotCebra = 90.0f; // Mirando hacia la derecha (+X)
+				rotCebra = 90.0f; 
 			}
-			// FASE 8: Giro final
+			// Giro final
 			else if (t < 34.0f)
 			{
 				float t8 = t - 33.0f;
@@ -2146,7 +2141,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				cebraPataTrasDer = 0.0f;
 				cebraPataTrasIzq = 0.0f;
 			}
-			// FASE 9: Quieta en posición inicial
+			//Quieta en posición inicial
 			else
 			{
 				cebraPos.x = -2.8f;
@@ -2155,19 +2150,17 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				cebraPataDelIzq = 0.0f;
 				cebraPataTrasDer = 0.0f;
 				cebraPataTrasIzq = 0.0f;
-				rotCebra = 180.0f; // Mirando hacia abajo
+				rotCebra = 180.0f;
 			}
 		}
 
-		// ---------------------------------------------------------------------------------
+	// ---------------------------------------------------------------------------------
 	// 							DIBUJO DE MODELOS DESIERTO (-x,z)
 	// ---------------------------------------------------------------------------------
 
 	// **** DIBUJO DEL PISO DESIERTO  Y COMPONENTES ****
 
 		DibujarPiso(pisoArenaTextureID, glm::vec3(-7.25f, -0.49f, 7.25f), glm::vec3(10.5f, 0.1f, 10.5f), VAO_Cubo, modelLoc);
-
-		//  ************ Codigo comentado para no cargar todo desde el inicio se descomenta al final *******
 
 		// --- OASIS ---
 		model = glm::mat4(1);
@@ -2205,7 +2198,6 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 
 		//CAMELLO
 
-
 		if (animarCamello)
 		{
 			float t = glfwGetTime() - startTimeCamello;
@@ -2214,39 +2206,38 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 			if (t < 8.0f)
 			{
 				// Movimiento de avance 
-				float totalDist = 10.0f - 5.0f; // distancia = 5 unidades
-				camelPos.z = 10.0f - (t * (totalDist / 8.0f)); // avanza desde Z=10 hasta Z=5
+				float totalDist = 10.0f - 5.0f; 
+				camelPos.z = 10.0f - (t * (totalDist / 8.0f));
 
-				// Movimiento de patas (alternadas)
-				float paso = sin(t * 2.0f); // frecuencia lenta
+				// Movimiento de patas
+				float paso = sin(t * 2.0f);
 				camelLegFL = paso * 15.0f;  // pata frontal izq
 				camelLegBR = paso * 15.0f;  // pata trasera der
 				camelLegFR = -paso * 15.0f; // pata frontal der (opuesta)
 				camelLegBL = -paso * 15.0f; // pata trasera izq (opuesta)
 
 				// Cabeza 
-				camelHead = sin(t * 0.5f) * 1.3f; // leve movimiento
+				camelHead = sin(t * 0.5f) * 1.3f;
 				rotCamel = 180.0f;
 			}
 
-			// FASE 2: LLEGA AL CACTUS
+			// LLEGA AL CACTUS
 			else if (t < 14.0f)
 			{
 				float t2 = t - 8.0f;
 				camelPos.z = 5.0f; // está en el cactus 
 
-				// Detiene patas lentamente
+				// Detiene patas
 				camelLegFL = sin(t2 * 1.0f) * 5.0f;
 				camelLegFR = -camelLegFL;
 				camelLegBL = -camelLegFR;
 				camelLegBR = camelLegFR;
 
-				// Movimiento de cabeza simulando comer
-				camelHead = abs(sin(t2 * 1.5f)) * 2.9f; // baja y sube lento
+				// Movimiento de cabeza
+				camelHead = abs(sin(t2 * 1.5f)) * 2.9f;
 				rotCamel = 180.0f;
 			}
 
-			
 			else
 			{
 				camelPos.z = 5.0f;
@@ -2257,6 +2248,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		}
 
 
+		// DIBUJO DEL CAMELLO
 		model = glm::mat4(1);
 		model = glm::translate(model, camelPos);
 		model = glm::rotate(model, glm::radians(rotCamel), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -2311,8 +2303,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 
 		//CONDOR
 
-		if (animarCondor)
-		{
+		if (animarCondor){
 			float t = glfwGetTime();
 			condorAlaIzq = sin(t * 10.0f) * 1.5f;
 			condorAlaDer = -condorAlaIzq;
@@ -2320,7 +2311,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 			condorPos.y = 0.7f + sin(t * 0.8f) * 0.15f;
 		}
 
-
+		// Cuerpo condor
 		model = glm::mat4(1);
 		model = glm::translate(model, condorPos);
 		model = glm::rotate(model, glm::radians(rotCondor), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -2353,12 +2344,12 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		CondorAla_Der.Draw(lightingShader);
 
-		//TORTUGA
+		//TORTUGA - ANIMACIÓN
 		if (animarTortuga)
 		{
 			float t = glfwGetTime() - startTimeTortuga; // tiempo de animación
 
-			//FASE 1: Camina hacia el agua
+			//Camina hacia el agua
 			if (t < 2.5f)
 			{
 				tortugaPos.x = -7.8f - (t * 0.08f);
@@ -2366,7 +2357,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				rotTortuga = 0.0f;
 				tortugaScale = 0.20f;
 			}
-			//FASE 2: Empieza a sumergirse
+			//Empieza a sumergirse
 			else if (t < 6.0f)
 			{
 				float t2 = t - 2.5f;
@@ -2375,18 +2366,17 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				tortugaScale = 0.20f - (t2 * 0.012f);  // se achica 
 				rotTortuga = sin(t2 * 0.5f) * 5.0f;
 			}
-			//FASE 3: Sale del agua
+			//Sale del agua
 			else if (t < 9.0f)
 			{
 				float t3 = t - 6.0f;
-				tortugaPos.x = -9.4f - (t3 * 0.7f);              // sale del agua
+				tortugaPos.x = -9.4f - (t3 * 0.7f);
 				tortugaPos.y = -0.425f + (t3 * 0.0483f);
 				tortugaScale = 0.19f + (t3 * 0.0033f);
-				rotTortuga = t3 * 60.0f;                         // empieza a girar 
+				rotTortuga = t3 * 60.0f;
 			}
-			//FASE FINAL: gira
-			else
-			{
+			//gira
+			else{
 				tortugaPos.x = -11.5f;
 				tortugaPos.y = -0.28f;
 				tortugaScale = 0.20f;
@@ -2394,7 +2384,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 			}
 		}
 
-		// parte cuerpo tortuga desierto
+		//Cuerpo tortuga desierto
 		model = glm::mat4(1);
 		model = glm::translate(model, tortugaPos);
 		model = glm::rotate(model, glm::radians(rotTortuga), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -2404,7 +2394,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		TortugaBody1.Draw(lightingShader);
 
 		// Pata delantera izquierda
-		glm::vec3 tortugaPivotFL(0.2f, 0.0f, 0.2f); // Ajusta según tu modelo
+		glm::vec3 tortugaPivotFL(0.2f, 0.0f, 0.2f);
 		model = modelTemp;
 		model = glm::translate(model, tortugaPivotFL);
 		model = glm::rotate(model, glm::radians(tortugaLegFL), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -2413,7 +2403,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		TortugaLeg_FL1.Draw(lightingShader);
 
 		// Pata delantera derecha
-		glm::vec3 tortugaPivotFR(-0.2f, 0.0f, 0.2f); // Ajusta según tu modelo
+		glm::vec3 tortugaPivotFR(-0.2f, 0.0f, 0.2f);
 		model = modelTemp;
 		model = glm::translate(model, tortugaPivotFR);
 		model = glm::rotate(model, glm::radians(tortugaLegFR), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -2432,10 +2422,10 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		// Aleteo (de -1 a 1 y de vuelta)
 		float aleteo = sin(t_aves * 6.0f); // 6.0 = aleteo rápido
 		rotAlaIzq = aleteo * 45.0f; // Sube y baja 45 grados
-		rotAlaDer = -aleteo * 45.0f; // Sube y baja 45 grados (opuesto)
+		rotAlaDer = -aleteo * 45.0f; // Sube y baja 45 grados
 
-		// Movimiento de cabeza (más lento)
-		rotCabeza = sin(t_aves * 1.5f) * 15.0f; // Gira 15 grados a los lados
+		// Movimiento de cabeza
+		rotCabeza = sin(t_aves * 1.5f) * 15.0f;
 
 
 		
@@ -2448,7 +2438,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		float walkDuration = 4.0f;   // 4 seg para caminar
 		float turnDuration = 1.0f;   // 1 seg para girar
 
-		// fmod da un tiempo que se repite de 0.0 a 10.0
+		// Tiempo que se repite de 0.0 a 10.0
 		float t_pingu = fmod(glfwGetTime(), cycleDuration);
 
 		// 2. Definir las fases del ciclo
@@ -2456,13 +2446,12 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		float walkBackStartTime = turn1StartTime + turnDuration; // 5.0s
 		float turn2StartTime = walkBackStartTime + walkDuration; // 9.0s
 
-		
 		glm::vec3 pinguStartPos = glm::vec3(pinguBasePos.x - pinguWalkDist, pinguBasePos.y, pinguBasePos.z);
 		glm::vec3 pinguEndPos = glm::vec3(pinguBasePos.x + pinguWalkDist, pinguBasePos.y, pinguBasePos.z);
 		
 
-		// 4. Lógica de Estado
-		if (t_pingu < turn1StartTime) // Fase 1: Caminar Adelante (0s a 4s)
+		// Lógica de Estado
+		if (t_pingu < turn1StartTime) // Caminar Adelante (0s a 4s)
 		{
 			// Interpolar la posición
 			float t_interp = t_pingu / walkDuration; // 0.0 a 1.0
@@ -2477,7 +2466,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 			rotAletaIzqPingu = abs(pasoPingu) * 25.0f;
 			rotAletaDerPingu = abs(pasoPingu) * 25.0f;
 		}
-		else if (t_pingu < walkBackStartTime) // Fase 2: Girar 180 
+		else if (t_pingu < walkBackStartTime) // Girar 180 
 		{
 			pinguPos = pinguEndPos; // Quedarse quieto en el punto final
 
@@ -2488,10 +2477,10 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 			// Detener animación 
 			rotPataIzqPingu = 0.0f; rotPataDerPingu = 0.0f; rotCuerpoPingu = 0.0f; rotAletaIzqPingu = 0.0f; rotAletaDerPingu = 0.0f;
 		}
-		else if (t_pingu < turn2StartTime) // Fase 3: Caminar de Regreso
+		else if (t_pingu < turn2StartTime) // Caminar de Regreso
 		{
 			// Interpolar la posición 
-			float t_interp = (t_pingu - walkBackStartTime) / walkDuration; // 0.0 a 1.0
+			float t_interp = (t_pingu - walkBackStartTime) / walkDuration;
 			pinguPos = glm::mix(pinguEndPos, pinguStartPos, t_interp);
 			pinguRotY = 270.0f; 
 
@@ -2503,7 +2492,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 			rotAletaIzqPingu = abs(pasoPingu) * 25.0f;
 			rotAletaDerPingu = abs(pasoPingu) * 25.0f;
 		}
-		else // Fase 4: Girar de Regreso 
+		else //Girar de Regreso 
 		{
 			pinguPos = pinguStartPos; // Quedarse quieto en el punto inicial
 
@@ -2518,7 +2507,6 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		// =================================================================================
 		// 							ANIMACIÓN DE ANIMALES - ACUARIO (TORTUGA)
 		// =================================================================================
-		
 
 		// 3. Definir las posiciones de inicio y fin 
 		
@@ -2590,8 +2578,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				rotTortugaAcuarioBL = 0.0f; rotTortugaAcuarioBR = 0.0f; rotTortugaAcuarioCuerpo = 0.0f;
 			}
 		}
-		else
-		{
+		else{
 			// Resetear a la posición incial
 			tortugaAcuarioPos = tortugaStartPos;
 			tortugaAcuarioRotY = 90.0f; 
@@ -2604,7 +2591,7 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 			rotTortugaAcuarioBR = 0.0f;
 			rotTortugaAcuarioCuerpo = 0.0f; 
 		}
-		// --- FIN ---
+
 		
 		// =================================================================================
 		// 							ANIMACIÓN DE ANIMALES - ACUARIO (NUTRIA)
@@ -2624,9 +2611,8 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 			// --- FASE 0: Impulso (Agacharse) ---
 			if (t_nutria < fase0End)
 			{
-				nutriaPos = nutriaPos1_Roca; // No te muevas
-				// --- ¡CORREGIDO! Rotar para ver al iglú ---
-				nutriaRotY = 45.0f; // (Ajusta este ángulo)
+				nutriaPos = nutriaPos1_Roca;
+				nutriaRotY = 45.0f;
 				rotNutriaCuerpoX = 15.0f; // Inclínate un poco
 
 				// Mueve las patas hacia atrás (agacharse)
@@ -2657,19 +2643,12 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 				float t_interp = (t_nutria - fase1End) / t_salto2;
 				nutriaPos = glm::mix(nutriaPos2_Iglu, nutriaPos3_Agua, t_interp);
 				nutriaPos.y += 2.0f * sin(glm::radians(t_interp * 180.0f));
-
-				// --- ¡CORREGIDO! Orientación del salto ---
-				nutriaRotY = 135.0f; // (Ajusta este ángulo para que mire al agua)
-				rotNutriaCuerpoX = t_interp * 360.0f; // Un giro completo en el aire
-
-				// --- ¡CORREGIDO! Reseteamos las patas/cabeza a 0 ---
-				// Dejamos que el giro del cuerpo (rotNutriaCuerpoX) haga todo el trabajo.
+				nutriaRotY = 135.0f;
+				rotNutriaCuerpoX = t_interp * 360.0f; // Un giro completo
 				rotNutriaFL = 0.0f; rotNutriaFR = 0.0f; rotNutriaBL = 0.0f; rotNutriaBR = 0.0f;
 				rotNutriaHead = 0.0f; rotNutriaCola = 0.0f;
 			}
-			// --- FASE 3: En el agua ---
-			else
-			{
+			else{
 				nutriaPos = nutriaPos3_Agua;
 				nutriaRotY = 135.0f;
 				rotNutriaCuerpoX = 360.0f; // Mantener rotación final
@@ -2680,15 +2659,14 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		}
 		else
 		{
-			// Resetear a la posición inicial (la roca)
+			// Resetear a la posición inicial
 			nutriaPos = nutriaPos1_Roca;
-			nutriaRotY = 45.0f; // --- ¡CORREGIDO! Que mire al iglú al resetear
+			nutriaRotY = 45.0f;
 			rotNutriaCuerpoX = 0.0f;
 			// Resetear partes del cuerpo
 			rotNutriaHead = 0.0f; rotNutriaCola = 0.0f; rotNutriaFL = 0.0f;
 			rotNutriaFR = 0.0f; rotNutriaBL = 0.0f; rotNutriaBR = 0.0f;
 		}
-		// --- FIN---
 
 		// =================================================================================
 		// 							DIBUJO DE MODELOS - AVIARIO (CENTRO)
@@ -2698,31 +2676,22 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
 		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
 		AviarioMadera.Draw(lightingShader); 
 
-
 		//  (Vidrio)
-
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		//  interruptor 'transparency' en el shader
 		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 1);
-
-		// Volvemos a aplicar la misma transformación para el vidrio
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
 		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
 		AviarioVidrio.Draw(lightingShader); 
 
 
 		// --- DIBUJAR EL AVE ---
 	
 		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 0);
-
 		// Cuerpo
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, avePos);
@@ -2732,7 +2701,6 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		AveCuerpo.Draw(lightingShader);
 
 		// Cabeza
-		
 		glm::vec3 pivoteCabeza(0.0f, 0.5f, 0.1f); 
 		model = modelTemp;
 		model = glm::translate(model, pivoteCabeza);
@@ -2742,7 +2710,6 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		AveCabeza.Draw(lightingShader);
 
 		// Ala Izquierda
-	
 		glm::vec3 pivoteAlaIzq(0.3f, 0.3f, 0.0f); 
 		model = modelTemp;
 		model = glm::translate(model, pivoteAlaIzq);
@@ -2752,7 +2719,6 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		AveAlaIzq.Draw(lightingShader);
 
 		// Ala Derecha
-		
 		glm::vec3 pivoteAlaDer(-0.3f, 0.3f, 0.0f); 
 		model = modelTemp;
 		model = glm::translate(model, pivoteAlaDer);
@@ -2762,27 +2728,20 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		AveAlaDer.Draw(lightingShader);
 
 		// Cola
-		
 		glm::vec3 pivoteCola(0.0f, 0.1f, -0.4f); 
 		model = modelTemp;
 		model = glm::translate(model, pivoteCola);
-		
 		model = glm::translate(model, -pivoteCola);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		AveCola.Draw(lightingShader);
 
 		// Patas
-		
 		glm::vec3 pivotePatas(0.0f, -0.2f, 0.0f); 
 		model = modelTemp;
 		model = glm::translate(model, pivotePatas);
-		
 		model = glm::translate(model, -pivotePatas);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		AvePatas.Draw(lightingShader);
-
-
-		
 		glDisable(GL_BLEND);
 		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 0);
 
@@ -2801,7 +2760,6 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		model = glm::translate(model, glm::vec3(0.0f, 0.5f, 0.0f)); 
 		model = glm::rotate(model, glm::radians(rotCuerpoPingu), glm::vec3(0.0f, 0.0f, 1.0f)); // Rotar en Z
 		model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f)); // Volver a la posición original
-
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		PinguCuerpo.Draw(lightingShader);
 
@@ -2841,78 +2799,33 @@ GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		PinguPataDer.Draw(lightingShader);
 
-		// ---------------------------------------------------------------------------------
-// 							DIBUJO DE MODELOS ENTRADA
-// ---------------------------------------------------------------------------------
-// --- TAQUILLA ---
-		model = glm::mat4(1);
-		model = glm::translate(model, taquillaPos);
-		model = glm::scale(model, taquillaScale);
-		model = glm::rotate(model, glm::radians(taquillaRot), glm::vec3(0.0f, 1.0f, 0.0f));
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		Taquilla.Draw(lightingShader);
-
-		// --- HELLO KITTY ---
-		model = glm::mat4(1);
-		model = glm::translate(model, kittyPos);
-		model = glm::scale(model, kittyScale);
-		model = glm::rotate(model, glm::radians(kittyRot), glm::vec3(0.0f, 1.0f, 0.0f));
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		Kitty.Draw(lightingShader);
-
-		// --- MONITO ---
-		model = glm::mat4(1);
-		model = glm::translate(model, monitoPos);
-		model = glm::scale(model, monitoScale);
-		model = glm::rotate(model, glm::radians(monitoRot), glm::vec3(0.0f, 1.0f, 0.0f));
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		Monito.Draw(lightingShader);
-
-		// --- CDMX ---
-		model = glm::mat4(1);
-		model = glm::translate(model, cdmxPos);
-		model = glm::scale(model, cdmxScale);
-		model = glm::rotate(model, glm::radians(cdmxRot), glm::vec3(0.0f, 1.0f, 0.0f));
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		CDMX.Draw(lightingShader);
-
-		// --- CARRUSEL ---
-		model = glm::mat4(1);
-		model = glm::translate(model, carruselPos);
-		model = glm::scale(model, carruselScale);
-		model = glm::rotate(model, glm::radians(carruselRot), glm::vec3(0.0f, 1.0f, 0.0f));
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		Carrusel.Draw(lightingShader);
 
 		lightingShader.Use(); // shader de iluminación 
 
-// ========================================================================
-// DIBUJAR SKYBOX
-// ========================================================================
-glDepthFunc(GL_LEQUAL);
-skyboxShader.Use();
-view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
-glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		// ========================================================================
+		//								DIBUJAR SKYBOX
+		// ========================================================================
 
-glBindVertexArray(skyboxVAO);
-glActiveTexture(GL_TEXTURE0);
-glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
-glDrawArrays(GL_TRIANGLES, 0, 36);
-glBindVertexArray(0);
-glDepthFunc(GL_LESS);
-//IMPORTANTE: Desenlazar la textura del skybox
-glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+		glDepthFunc(GL_LEQUAL);
+		skyboxShader.Use();
+		view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+		glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		glBindVertexArray(skyboxVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(0);
+		glDepthFunc(GL_LESS);
 
+		//Desenlazar la textura del skybox
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
 	}
 
-
 	// Terminate GLFW, clearing any resources allocated by GLFW.
 	glfwTerminate();
-
-
 
 	return 0;
 }
@@ -2986,245 +2899,150 @@ void DibujarPiso(GLuint textureID, glm::vec3 posicion, glm::vec3 escala, GLuint 
 	glBindVertexArray(0);
 }
 
-// Moves/alters the camera positions based on user input
+// Moves
 void DoMovement()
 {
 
 	// Camera controls
-	if (keys[GLFW_KEY_W] || keys[GLFW_KEY_UP])
-	{
-		camera.ProcessKeyboard(FORWARD, deltaTime);
-		
-	}
+	if (keys[GLFW_KEY_W] || keys[GLFW_KEY_UP]){camera.ProcessKeyboard(FORWARD, deltaTime);}
+	if (keys[GLFW_KEY_S] || keys[GLFW_KEY_DOWN]){camera.ProcessKeyboard(BACKWARD, deltaTime);}
+	if (keys[GLFW_KEY_A] || keys[GLFW_KEY_LEFT]){camera.ProcessKeyboard(LEFT, deltaTime);}
+	if (keys[GLFW_KEY_D] || keys[GLFW_KEY_RIGHT]){camera.ProcessKeyboard(RIGHT, deltaTime);}
 
-	if (keys[GLFW_KEY_S] || keys[GLFW_KEY_DOWN])
-	{
-		camera.ProcessKeyboard(BACKWARD, deltaTime);
-		
-
-	}
-
-	if (keys[GLFW_KEY_A] || keys[GLFW_KEY_LEFT])
-	{
-		camera.ProcessKeyboard(LEFT, deltaTime);
-		
-
-	}
-
-	if (keys[GLFW_KEY_D] || keys[GLFW_KEY_RIGHT])
-	{
-		camera.ProcessKeyboard(RIGHT, deltaTime);
-		
-
-	}
 
 	// CAMBIAR TIPO DE CÁMARA (Primera/Tercera persona)
-	if (keys[GLFW_KEY_TAB])
-	{
-		if (!teclaTAB_presionada)
-		{
+	if (keys[GLFW_KEY_TAB]){
+		if (!teclaTAB_presionada){
 			camera.ToggleCameraType();
 			teclaTAB_presionada = true;
-
-			// Mensaje en consola (opcional)
 			if (camera.GetCameraType() == FIRST_PERSON)
 				std::cout << "Camara: PRIMERA PERSONA" << std::endl;
 			else
 				std::cout << "Camara: TERCERA PERSONA" << std::endl;
 		}
 	}
-	else
-	{
+	else{
 		teclaTAB_presionada = false;
 	}
 
-	//ELEFANTE
-	if (keys[GLFW_KEY_V])
-	{
-		if (!teclaV_presionada)
-		{
+	// ANIMALES SABANA
+
+	//ELEFANTE (Tecla V)
+	if (keys[GLFW_KEY_V]){
+		if (!teclaV_presionada){
 			animarElefante = !animarElefante;
 			startTimeElefante = glfwGetTime();
-			teclaV_presionada = true;
-		}
-	}
-	else
-	{
+			teclaV_presionada = true;}}
+	else{
 		teclaV_presionada = false;
 	}
 
-	//JIRAFA
-	if (keys[GLFW_KEY_J])
-	{
-		if (!teclaJ_presionada)
-		{
+	//JIRAFA (Tecla J)
+	if (keys[GLFW_KEY_J]){
+		if (!teclaJ_presionada){
 			animarJirafa = !animarJirafa;
 			startTimeJirafa = glfwGetTime();
-			teclaJ_presionada = true;
-		}
-	}
-	else
-	{
+			teclaJ_presionada = true;}}
+	else{
 		teclaJ_presionada = false;
 	}
 
-	// --- ¡NUEVO! CEBRA (Tecla L) ---
-	if (keys[GLFW_KEY_L])
-	{
-		if (!teclaL_presionada)
-		{
+	// CEBRA (Tecla L)
+	if (keys[GLFW_KEY_L]){
+		if (!teclaL_presionada){
 			animarCebra = !animarCebra;
 			startTimeCebra = glfwGetTime();
-			teclaL_presionada = true;
-		}
-	}
-	else
-	{
+			teclaL_presionada = true;}}
+	else{
 		teclaL_presionada = false;
 	}
 
-	//CAMELLO
-	if (keys[GLFW_KEY_C])
-	{
-		if (!teclaC_presionada)
-		{
+	// ANMALES DESIERTO
+
+	//CAMELLO(Tecla C)
+	if (keys[GLFW_KEY_C]){
+		if (!teclaC_presionada){
 			animarCamello = !animarCamello;
 			startTimeCamello = glfwGetTime();
-			teclaC_presionada = true;
-		}
-	}
-	else
-	{
+			teclaC_presionada = true;}}
+	else{
 		teclaC_presionada = false;
 	}
-
-	//CONDOR
-	if (keys[GLFW_KEY_Z])
-	{
-		if (!teclaZ_presionada)
-		{
+	//CONDOR(Tecla Z)
+	if (keys[GLFW_KEY_Z]){
+		if (!teclaZ_presionada){
 			animarCondor = !animarCondor;
-			teclaZ_presionada = true;
-		}
-	}
-	else
-	{
+			teclaZ_presionada = true;}}
+	else{
 		teclaZ_presionada = false;
 	}
-
-	//TORTUGA
-	if (keys[GLFW_KEY_X])
-	{
-		if (!teclaX_presionada) // solo la primera vez que se presiona
-		{
+	//TORTUGA(Tecla X)
+	if (keys[GLFW_KEY_X]){
+		if (!teclaX_presionada){
 			animarTortuga = !animarTortuga;       
-			startTimeTortuga = glfwGetTime();     // reinicia animación
-			teclaX_presionada = true;             // evita repeticiones
-		}
-	}
-	else
-	{
-		teclaX_presionada = false; // se suelta la tecla
+			startTimeTortuga = glfwGetTime(); 
+			teclaX_presionada = true;}}
+	else{
+		teclaX_presionada = false;
 	}
 	
-	//CAPIBARA
-	if (keys[GLFW_KEY_B])
-	{
-		if (!teclaP_presionada) // Reutilizas la variable que ya tienes
-		{
+	// ANMALES SELVA
+
+	//CAPIBARA(Tecla B)
+	if (keys[GLFW_KEY_B]){
+		if (!teclaP_presionada){
 			animarCapibara = !animarCapibara;
 			startTimeCapibara = glfwGetTime();
-			teclaP_presionada = true;
-		}
-	}
-	else
-	{
+			teclaP_presionada = true;}}
+	else{
 		teclaP_presionada = false;
 	}
 
-	//MONO
-	if (keys[GLFW_KEY_M])
-	{
-		if (!teclaM_presionada)
-		{
+	//MONO(Tecla M)
+	if (keys[GLFW_KEY_M]){
+		if (!teclaM_presionada){
 			animarMono = !animarMono;
 			startTimeMono = glfwGetTime();
-			teclaM_presionada = true;
-		}
-	}
-	else
-	{
+			teclaM_presionada = true;}}
+	else{
 		teclaM_presionada = false;
 	}
-	// --- ¡NUEVO! NUTRIA ACUARIO (Tecla N) ---
-	if (keys[GLFW_KEY_N])
-	{
-		if (!teclaN_presionada)
-		{
-			animarNutria = !animarNutria;
-			startTimeNutria = glfwGetTime();
-			teclaN_presionada = true;
-		}
-	}
-	else
-	{
-		teclaN_presionada = false;
-	}
-	// --- FIN NUEVO ---
-
-	if (keys[GLFW_KEY_H])
-	{
-		pointLightPositions[0].y -= 0.01f;
-	}
-	//  TORTUGA ACUARIO (Tecla T) ---
-	if (keys[GLFW_KEY_T])
-	{
-		if (!teclaT_presionada)
-		{
-			animarTortugaAcuario = !animarTortugaAcuario;
-			startTimeTortugaAcuario = glfwGetTime();
-			teclaT_presionada = true;
-		}
-	}
-	else
-	{
-		teclaT_presionada = false;
-	}
-	// --- FIN ---
-
-	if (keys[GLFW_KEY_H])
-	{
-		pointLightPositions[0].y -= 0.01f;
-	}
-
-	//GUACAMAYA
-	if (keys[GLFW_KEY_O])
-	{
-		if (!teclaO_presionada)
-		{
+	
+	//GUACAMAYA(Tecla O)
+	if (keys[GLFW_KEY_O]) {
+		if (!teclaO_presionada) {
 			animarGuacamaya = !animarGuacamaya;
 			startTimeGuacamaya = glfwGetTime();
 			teclaO_presionada = true;
 		}
 	}
-	else
-	{
+	else {
 		teclaO_presionada = false;
 	}
 
-	if (keys[GLFW_KEY_H])
-	{
-		pointLightPositions[0].y -= 0.01f;
-	}
-	if (keys[GLFW_KEY_U])
-	{
-		pointLightPositions[0].z -= 0.1f;
-	}
-	if (keys[GLFW_KEY_J])
-	{
-		pointLightPositions[0].z += 0.01f;
-	}
+	// ANIMALES ACUARIO
 
+	//NUTRIA(Tecla N)
+	if (keys[GLFW_KEY_N]){
+		if (!teclaN_presionada){
+			animarNutria = !animarNutria;
+			startTimeNutria = glfwGetTime();
+			teclaN_presionada = true;}}
+	else{
+		teclaN_presionada = false;
+	}
+	
+	//TORTUGA ACUARIO(Tecla T)
+	if (keys[GLFW_KEY_T]){
+		if (!teclaT_presionada){
+			animarTortugaAcuario = !animarTortugaAcuario;
+			startTimeTortugaAcuario = glfwGetTime();
+			teclaT_presionada = true;
+		}
+	}
+	else{
+		teclaT_presionada = false;
+	}
 
 }
 
