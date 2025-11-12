@@ -2,7 +2,7 @@
 
 
 
-#define NUMBER_OF_POINT_LIGHTS 1
+#define NUMBER_OF_POINT_LIGHTS 7
 
 
 

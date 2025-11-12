@@ -49,7 +49,13 @@ bool active;
 
 // Posiciones para luces puntuales 
 glm::vec3 pointLightPositions[] = {
-	glm::vec3(2.0f, 0.2f,  2.0f),  // Esquina 1 (Positivo X, Positivo Z)
+	glm::vec3(2.0f, 0.2f,  2.0f),  // Luz 0: Centro
+	glm::vec3(4.1f, 5.5f, 12.5f),  // Luz 1: ENTRADA
+	glm::vec3(-6.8f, -0.5f, 6.0f),  // Luz 2: DESIERTO - Oasis
+	glm::vec3(-7.25f, 2.0f, -7.25f), // Luz 3: SABANA
+	glm::vec3(11.2f, 1.2f, -9.0f), // Luz 4: ACUARIO - Iglú
+	glm::vec3(0.0f, 2.5f, 0.0f),   // Luz 5: AVIARIO
+	glm::vec3(7.25f, 1.5f, 7.25f)  // Luz 6: SELVA
 };
 
 
@@ -165,7 +171,7 @@ float elefanteLegBL = 0.0f;
 float elefanteLegBR = 0.0f;
 float elefanteTrompa = 0.0f;
 float elefanteScale = 0.50f;
-glm::vec3 elefantePos = glm::vec3(-11.0f, -0.4f, -10.5f);
+glm::vec3 elefantePos = glm::vec3(-9.0f, -0.4f, -10.5f);
 bool animarElefante = false;
 float startTimeElefante = 0.0f;
 bool teclaV_presionada = false;
@@ -461,8 +467,13 @@ float skyboxVertices[] = {
 
 	Model Taquilla((char*)"Models/taquilla/taquilla.obj");
 	glm::vec3 taquillaPos(3.5f, 0.4f, 14.5f);
-	glm::vec3 taquillaScale(3.5f, 3.0f, 3.5f);
+	glm::vec3 taquillaScale(4.5f, 4.5f, 4.5f);
 	float taquillaRot = 270.0f;
+
+	Model Naruto((char*)"Models/naruto/naruto.obj");
+	glm::vec3 NarutoPos(3.0f, -0.5f, 14.5f); 
+	glm::vec3 NarutoScale(0.010f, 0.010f, 0.010f);
+	float NarutoRot = 279.0f;
 
 	Model Kitty((char*)"Models/hellokitty/hellokitty.obj");
 	glm::vec3 kittyPos(-2.5f, 0.4f, 14.5f);
@@ -475,9 +486,9 @@ float skyboxVertices[] = {
 	float monitoRot = 270.0f;
 
 	Model CDMX((char*)"Models/cdmx/cdmx.obj");
-	glm::vec3 cdmxPos(-9.0f, 0.4f, 20.0f);
+	glm::vec3 cdmxPos(-7.0f, 0.4f, 20.0f);
 	glm::vec3 cdmxScale(5.0f, 5.0f, 4.0f);
-	float cdmxRot = 270.0f;
+	float cdmxRot = -25.0f;
 
 	Model Carrusel((char*)"Models/carrusel/carrusel.obj");
 	glm::vec3 carruselPos(9.0f, 1.0f, 19.0f);
@@ -586,6 +597,7 @@ float skyboxVertices[] = {
 	glm::vec3 plantaSelva1Pos(8.5f, -0.3f, 3.1f);
 	glm::vec3 plantaSelva1Scale(0.4f, 0.4f, 0.4f);
 	float plantaSelva1Rot = 0.0f;
+	glm::vec3 plantaSelva3Pos(-3.8f, -0.3f, -3.1f);
 
 	Model PlantaSelva2((char*)"Models/plantaSelva/planta_selva.obj");
 	glm::vec3 plantaSelva2Pos(11.0f, -0.3f, 9.5f);
@@ -707,12 +719,13 @@ float skyboxVertices[] = {
 
 	// ====== ESCENARIO ======
 	
-	//ROCA
+	//ARBOL
 	Model ArbolSabana((char*)"Models/arbolSabana/arbol.obj");
 	glm::vec3 arbolSabanaPos(-11.0f, 1.0f, -3.2f);
 	glm::vec3 arbolSabanaScale(3.5f, 3.5f, 3.5f);
 	float arbolSabanaRot = 0.0f;
-	
+	glm::vec3 arbolSabanaPos2(-3.5f, 1.0f, -11.2f);
+
 	// ROCA
 	Model Roca((char*)"Models/roca/roca.obj");
 	glm::vec3 RocaPos(-7.25f, -0.5f, -11.8f);
@@ -864,19 +877,25 @@ float skyboxVertices[] = {
 		glUniform3f(viewPosLoc, camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
 
 
-		// Luz Direccional (dirLight)
+		// ===================================================================
+		// 					CONFIGURACIÓN DE LUCES
+		// ===================================================================
+
+		// Luz Direccional
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.direction"), -0.4f, -1.0f, -0.2f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.ambient"), 0.15f, 0.13f, 0.10f); 
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.diffuse"), 0.9f, 0.85f, 0.75f); 
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.ambient"), 0.15f, 0.13f, 0.10f);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.diffuse"), 0.9f, 0.85f, 0.75f);
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.specular"), 1.0f, 0.95f, 0.85f);
 
-		// Luces Puntuales (pointLights) - Usando los colores de las lámparas
-		// Point light 1
+		// ===================================================================
+		// 		LUCES PUNTUALES
+		// ===================================================================
+
+		// --- LUZ 0: Centro
 		glm::vec3 lightColor;
 		lightColor.x = abs(sin(glfwGetTime() * Light1.x));
 		lightColor.y = abs(sin(glfwGetTime() * Light1.y));
 		lightColor.z = sin(glfwGetTime() * Light1.z);
-
 
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[0].position"), pointLightPositions[0].x, pointLightPositions[0].y, pointLightPositions[0].z);
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[0].ambient"), lightColor.x, lightColor.y, lightColor.z);
@@ -886,19 +905,76 @@ float skyboxVertices[] = {
 		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[0].linear"), 0.045f);
 		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[0].quadratic"), 0.075f);
 
+		// --- LUZ 1: ENTRADA sobre el letrero
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[1].position"), pointLightPositions[1].x, pointLightPositions[1].y, pointLightPositions[1].z);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[1].ambient"), 0.1f, 0.1f, 0.08f); 
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[1].diffuse"), 0.8f, 0.9f, 1.0f); // Luz cálida 
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[1].specular"), 0.2f, 0.2f, 0.15f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[1].constant"), 1.0f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[1].linear"), 0.045f); 
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[1].quadratic"), 0.07f);
 
-		// SpotLight  //una luz tipo linterna en la cámara
+		// --- LUZ 2: DESIERTO
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[2].position"), pointLightPositions[2].x, pointLightPositions[2].y, pointLightPositions[2].z);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[2].ambient"), 0.1f, 0.1f, 0.08f);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[2].diffuse"), 0.8f, 0.9f, 1.0f); 
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[2].specular"), 0.2f, 0.15f, 0.1f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[2].constant"), 1.0f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[2].linear"), 0.045f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[2].quadratic"), 0.07f);
+
+		// --- LUZ 3: SABANA
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[3].position"), pointLightPositions[3].x, pointLightPositions[3].y, pointLightPositions[3].z);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[3].ambient"), 0.05f, 0.05f, 0.04f);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[3].diffuse"), 0.35f, 0.33f, 0.28f); // Amarillo
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[3].specular"), 0.2f, 0.2f, 0.15f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[3].constant"), 1.0f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[3].linear"), 0.14f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[3].quadratic"), 0.07f);
+
+		// --- LUZ 4: ACUARIO
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[4].position"), pointLightPositions[4].x, pointLightPositions[4].y, pointLightPositions[4].z);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[4].ambient"), 0.03f, 0.05f, 0.06f); 
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[4].diffuse"), 0.2f, 0.3f, 0.4f); // Azul
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[4].specular"), 0.15f, 0.2f, 0.25f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[4].constant"), 1.0f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[4].linear"), 0.045f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[4].quadratic"), 0.07f);
+
+		// --- LUZ 5: AVIARIO
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[5].position"), pointLightPositions[5].x, pointLightPositions[5].y, pointLightPositions[5].z);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[5].ambient"), 0.04f, 0.05f, 0.04f);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[5].diffuse"), 0.25f, 0.3f, 0.25f); // Verde muy suave
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[5].specular"), 0.15f, 0.2f, 0.15f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[5].constant"), 1.0f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[5].linear"), 0.045f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[5].quadratic"), 0.20f);
+
+		// --- LUZ 6: SELVA
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[6].position"), pointLightPositions[6].x, pointLightPositions[6].y, pointLightPositions[6].z);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[6].ambient"), 0.1f, 0.1f, 0.08f);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[6].diffuse"), 0.6f, 0.5f, 0.4f); // Verde suave
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[6].specular"), 0.15f, 0.25f, 0.15f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[6].constant"), 1.0f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[6].linear"), 0.045f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[6].quadratic"), 0.07f);
+
+		// ===================================================================
+		// 				SpotLight
+		// ===================================================================
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.position"), camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.direction"), camera.GetFront().x, camera.GetFront().y, camera.GetFront().z);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.ambient"), 0.8f, 0.8f, 0.8f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.diffuse"), 0.8f, 0.8f, 0.8f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.specular"), 1.0f, 1.0f, 1.0f);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.ambient"), 0.0f, 0.0f, 0.0f);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.diffuse"), 0.0f, 0.0f, 0.0f);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.specular"), 0.0f, 0.0f, 0.0f);
 		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.constant"), 1.0f);
 		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.linear"), 0.3f);
 		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.quadratic"), 0.7f);
 		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.cutOff"), glm::cos(glm::radians(6.0f)));
 		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.outerCutOff"), glm::cos(glm::radians(10.0f)));
 
+		// Set material properties
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "material.shininess"), 32.0f);
 		// Set material properties
 		glUniform1f(glGetUniformLocation(lightingShader.Program, "material.shininess"), 32.0f);
 
@@ -957,6 +1033,14 @@ float skyboxVertices[] = {
 		model = glm::rotate(model, glm::radians(taquillaRot), glm::vec3(0.0f, 1.0f, 0.0f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		Taquilla.Draw(lightingShader);
+
+		// --- NARUTO ---
+		model = glm::mat4(1);
+		model = glm::translate(model, NarutoPos);
+		model = glm::scale(model, NarutoScale);
+		model = glm::rotate(model, glm::radians(NarutoRot), glm::vec3(0.0f, 1.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Naruto.Draw(lightingShader);
 
 		// --- HELLO KITTY ---
 		model = glm::mat4(1);
@@ -1711,6 +1795,22 @@ float skyboxVertices[] = {
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		Roca.Draw(lightingShader);
 
+		// --- Arbol 2 ---
+		model = glm::mat4(1);
+		model = glm::translate(model, arbolSabanaPos2);
+		model = glm::scale(model, arbolSabanaScale);
+		model = glm::rotate(model, glm::radians(arbolSabanaRot), glm::vec3(0.0f, 1.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		ArbolSabana.Draw(lightingShader);
+
+		//--- PLANTA ---
+		model = glm::mat4(1);
+		model = glm::translate(model, plantaSelva3Pos);
+		model = glm::scale(model, plantaSelva1Scale);
+		model = glm::rotate(model, glm::radians(plantaSelva1Rot), glm::vec3(0.0f, 1.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		PlantaSelva1.Draw(lightingShader);
+
 
 		// **** DIBUJO DE ANIMALES SABANA ****
 
@@ -1778,9 +1878,9 @@ float skyboxVertices[] = {
 			// CAMINANDO (0s - 8s)
 			if (t < 8.0f)
 			{
-				// Movimiento en EJE X
-				float totalDist = 5.0f;
-				elefantePos.x = -11.0f + (t * (totalDist / 8.0f));
+
+				float totalDist = 3.0f;
+				elefantePos.x = -9.0f + (t * (totalDist / 8.0f));
 
 				// Movimiento de patas
 				float paso = sin(t * 2.0f);
@@ -1794,7 +1894,7 @@ float skyboxVertices[] = {
 				rotElefante = 90.0f;
 				rotElefanteLado = 0.0f;
 				elefantePos.y = -0.4f;
-				elefantePos.z = -10.5f;  
+				elefantePos.z = -10.5f;
 			}
 
 			//SE ACUESTA DE LADO
@@ -1802,7 +1902,7 @@ float skyboxVertices[] = {
 			{
 				float t2 = t - 8.0f;
 				elefantePos.x = -6.0f;
-				elefantePos.z = -10.5f; 
+				elefantePos.z = -10.5f;
 
 				// Rotación lateral
 				rotElefanteLado = t2 * 22.5f;
@@ -2013,11 +2113,10 @@ float skyboxVertices[] = {
 			float t = glfwGetTime() - startTimeCebra;
 
 			//Caminar hacia abajo
-			if (t < 7.0f)
-			{
+			if (t < 3.5f){
 				cebraPos.x = -2.8f;
-				float totalDist = 6.5f; // Distancia en Z 
-				cebraPos.z = -3.5f - (t * (totalDist / 7.0f)); // Avanza hacia -Z
+				float totalDist = 3.25f;
+				cebraPos.z = -3.5f - (t * (totalDist / 3.5f));
 
 				// Ciclo de caminata
 				float paso = sin(t * 5.5f);
@@ -2029,11 +2128,11 @@ float skyboxVertices[] = {
 				rotCebra = 180.0f;
 			}
 			// Girar hacia la izquierda 
-			else if (t < 8.0f)
+			else if (t < 4.5f)
 			{
-				float t2 = t - 7.0f;
+				float t2 = t - 3.5f;
 				cebraPos.x = -2.8f;
-				cebraPos.z = -10.0f;
+				cebraPos.z = -6.75f;
 
 				// Rotación
 				rotCebra = 180.0f + (t2 * 90.0f);
@@ -2044,13 +2143,13 @@ float skyboxVertices[] = {
 				cebraPataTrasDer = 0.0f;
 				cebraPataTrasIzq = 0.0f;
 			}
-			// FASE 3: Caminar hacia la izquierda
-			else if (t < 16.0f)
+			//Caminar hacia la izquierda
+			else if (t < 12.5f)
 			{
-				float t3 = t - 8.0f;
-				float totalDist = 7.7f; // Distancia en X
-				cebraPos.x = -2.8f - (t3 * (totalDist / 8.0f)); // Avanza hacia -X
-				cebraPos.z = -10.0f;
+				float t3 = t - 4.5f;
+				float totalDist = 7.7f;
+				cebraPos.x = -2.8f - (t3 * (totalDist / 8.0f));
+				cebraPos.z = -6.75f;
 
 				// Ciclo de caminata
 				float paso = sin(t3 * 5.5f);
@@ -2062,11 +2161,11 @@ float skyboxVertices[] = {
 				rotCebra = 270.0f;
 			}
 			// Girar hacia arriba
-			else if (t < 17.0f)
+			else if (t < 13.5f)
 			{
-				float t4 = t - 16.0f;
+				float t4 = t - 12.5f;
 				cebraPos.x = -10.5f;
-				cebraPos.z = -10.0f;
+				cebraPos.z = -6.75f;
 
 				// rotación
 				rotCebra = 270.0f + (t4 * 90.0f);
@@ -2077,13 +2176,13 @@ float skyboxVertices[] = {
 				cebraPataTrasDer = 0.0f;
 				cebraPataTrasIzq = 0.0f;
 			}
-			//Caminar hacia arriba
-			else if (t < 24.0f)
+			// Caminar hacia arriba
+			else if (t < 17.0f)
 			{
-				float t5 = t - 17.0f;
+				float t5 = t - 13.5f;
 				cebraPos.x = -10.5f;
-				float totalDist = 6.5f;
-				cebraPos.z = -10.0f + (t5 * (totalDist / 7.0f)); // Avanza hacia +Z
+				float totalDist = 3.25f;
+				cebraPos.z = -6.75f + (t5 * (totalDist / 3.5f));
 
 				// Ciclo de caminata
 				float paso = sin(t5 * 5.5f);
@@ -2094,9 +2193,9 @@ float skyboxVertices[] = {
 				rotCebra = 0.0f;
 			}
 			// Giro final hacia la derecha
-			else if (t < 25.0f)
+			else if (t < 18.0f) 
 			{
-				float t6 = t - 24.0f;
+				float t6 = t - 17.5f;
 				cebraPos.x = -10.5f;
 				cebraPos.z = -3.5f;
 
@@ -2110,25 +2209,25 @@ float skyboxVertices[] = {
 				cebraPataTrasIzq = 0.0f;
 			}
 			//Caminar de regreso a la posición inicial
-			else if (t < 33.0f)
+			else if (t < 26.0f)
 			{
-				float t7 = t - 25.0f;
-				float totalDist = 7.7f; // Distancia en X
-				cebraPos.x = -10.5f + (t7 * (totalDist / 8.0f)); // Avanza hacia +X
+				float t7 = t - 18.0f;
+				float totalDist = 7.7f;
+				cebraPos.x = -10.5f + (t7 * (totalDist / 8.0f));
 				cebraPos.z = -3.5f;
 
 				// Ciclo de caminata
 				float paso = sin(t7 * 5.5f);
 				cebraPataDelDer = paso * 4.0f;
 				cebraPataTrasDer = paso * 4.0f;
-				cebraPataDelIzq = -paso * .0f;
+				cebraPataDelIzq = -paso * 4.0f;
 				cebraPataTrasIzq = -paso * 4.0f;
-				rotCebra = 90.0f; 
+				rotCebra = 90.0f;
 			}
 			// Giro final
-			else if (t < 34.0f)
+			else if (t < 27.0f)
 			{
-				float t8 = t - 33.0f;
+				float t8 = t - 26.0f;
 				cebraPos.x = -2.8f;
 				cebraPos.z = -3.5f;
 
@@ -2674,7 +2773,7 @@ float skyboxVertices[] = {
 
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
-		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+		model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		AviarioMadera.Draw(lightingShader); 
 
@@ -2684,7 +2783,7 @@ float skyboxVertices[] = {
 		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 1);
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
-		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+		model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		AviarioVidrio.Draw(lightingShader); 
 
