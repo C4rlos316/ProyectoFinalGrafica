@@ -204,6 +204,18 @@ bool animarJirafa = false;
 float startTimeJirafa = 0.0f;
 bool teclaJ_presionada = false;
 
+// --- CEBRA (-X,-Z) ---
+float cebraScale = 0.027f;
+float rotCebra = 180.0f; // Empieza mirando hacia abajo (-Z)
+float cebraPataDelDer = 0.0f;
+float cebraPataDelIzq = 0.0f;
+float cebraPataTrasDer = 0.0f;
+float cebraPataTrasIzq = 0.0f;
+glm::vec3 cebraPos = glm::vec3(-2.8f, -0.4f, -3.5f); // Esquina cerca de la entrada
+bool animarCebra = false;
+float startTimeCebra = 0.0f;
+bool teclaL_presionada = false;
+
 // -----------------------------------------
 //  DESIERTO (-X,Z)
 // -----------------------------------------
@@ -707,6 +719,13 @@ int main()
 	Model Jirafa_PataDelIzq((char*)"Models/jirafa/pataDelIzqJirafa.obj");
 	Model Jirafa_PataTrasDer((char*)"Models/jirafa/pataTrasDerJirafa.obj");
 	Model Jirafa_PataTrasIzq((char*)"Models/jirafa/pataTrasIzqJirafa.obj");
+
+	//CEBRA
+	Model Cebra_Cuerpo((char*)"Models/cebra/cebra_cuerpo.obj");
+	Model Cebra_PataDelDer((char*)"Models/cebra/cebra_pata_der_enfr.obj");
+	Model Cebra_PataDelIzq((char*)"Models/cebra/cebra_pata_izq_enfr.obj");
+	Model Cebra_PataTrasDer((char*)"Models/cebra/cebra_pata_der_atras.obj");
+	Model Cebra_PataTrasIzq((char*)"Models/cebra/cebra_pata_izq_atras.obj");
 
 	// =================================================================================
     // 						CARGA DE MODELOS - ENTRADA
@@ -1942,6 +1961,201 @@ int main()
 			}
 		}
 
+		// --- ¡NUEVO! **** DIBUJO DE LA CEBRA **** ---
+		model = glm::mat4(1);
+		model = glm::translate(model, cebraPos);
+		model = glm::rotate(model, glm::radians(rotCebra), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(cebraScale));
+		modelTemp = model;
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Cebra_Cuerpo.Draw(lightingShader);
+
+		// Pata delantera derecha
+		glm::vec3 cebraPivotPataDelDer(0.3f, 0.8f, 0.4f); // Ajusta estos valores según tu modelo
+		model = modelTemp;
+		model = glm::translate(model, cebraPivotPataDelDer);
+		model = glm::rotate(model, glm::radians(cebraPataDelDer), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -cebraPivotPataDelDer);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Cebra_PataDelDer.Draw(lightingShader);
+
+		// Pata delantera izquierda
+		glm::vec3 cebraPivotPataDelIzq(-0.3f, 0.8f, 0.4f);
+		model = modelTemp;
+		model = glm::translate(model, cebraPivotPataDelIzq);
+		model = glm::rotate(model, glm::radians(cebraPataDelIzq), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -cebraPivotPataDelIzq);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Cebra_PataDelIzq.Draw(lightingShader);
+
+		// Pata trasera derecha
+		glm::vec3 cebraPivotPataTrasDer(0.3f, 0.8f, -0.4f);
+		model = modelTemp;
+		model = glm::translate(model, cebraPivotPataTrasDer);
+		model = glm::rotate(model, glm::radians(cebraPataTrasDer), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -cebraPivotPataTrasDer);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Cebra_PataTrasDer.Draw(lightingShader);
+
+		// Pata trasera izquierda
+		glm::vec3 cebraPivotPataTrasIzq(-0.3f, 0.8f, -0.4f);
+		model = modelTemp;
+		model = glm::translate(model, cebraPivotPataTrasIzq);
+		model = glm::rotate(model, glm::radians(cebraPataTrasIzq), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, -cebraPivotPataTrasIzq);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Cebra_PataTrasIzq.Draw(lightingShader);
+
+
+		// ---  CEBRA - ANIMACIÓN  ---
+		if (animarCebra)
+		{
+			float t = glfwGetTime() - startTimeCebra;
+
+			// FASE 1: Caminar hacia abajo (Z: -3.5 → -10.0) - 7 segundos
+			if (t < 7.0f)
+			{
+				cebraPos.x = -2.8f;
+				float totalDist = 6.5f; // Distancia en Z (de -3.5 a -10.0)
+				cebraPos.z = -3.5f - (t * (totalDist / 7.0f)); // Avanza hacia -Z
+
+				// Ciclo de caminata
+				float paso = sin(t * 5.5f);
+				cebraPataDelDer = paso * 4.0f;
+				cebraPataTrasDer = paso * 4.0f;
+				cebraPataDelIzq = -paso * 4.0f;
+				cebraPataTrasIzq = -paso * 4.0f;
+
+				rotCebra = 180.0f;
+			}
+			// FASE 2: Girar hacia la izquierda 
+			else if (t < 8.0f)
+			{
+				float t2 = t - 7.0f;
+				cebraPos.x = -2.8f;
+				cebraPos.z = -10.0f;
+
+				// Rotación
+				rotCebra = 180.0f + (t2 * 90.0f);
+
+				// Detener patas
+				cebraPataDelDer = 0.0f;
+				cebraPataDelIzq = 0.0f;
+				cebraPataTrasDer = 0.0f;
+				cebraPataTrasIzq = 0.0f;
+			}
+			// FASE 3: Caminar hacia la izquierda (X: -2.8 → -10.5) - 8 segundos
+			else if (t < 16.0f)
+			{
+				float t3 = t - 8.0f;
+				float totalDist = 7.7f; // Distancia en X (de -2.8 a -10.5)
+				cebraPos.x = -2.8f - (t3 * (totalDist / 8.0f)); // Avanza hacia -X
+				cebraPos.z = -10.0f;
+
+				// Ciclo de caminata
+				float paso = sin(t3 * 5.5f);
+				cebraPataDelDer = paso * 4.0f;
+				cebraPataTrasDer = paso * 4.0f;
+				cebraPataDelIzq = -paso * 4.0f;
+				cebraPataTrasIzq = -paso * 4.0f;
+
+				rotCebra = 270.0f;
+			}
+			// FASE 4: Girar hacia arriba
+			else if (t < 17.0f)
+			{
+				float t4 = t - 16.0f;
+				cebraPos.x = -10.5f;
+				cebraPos.z = -10.0f;
+
+				// rotación
+				rotCebra = 270.0f + (t4 * 90.0f);
+
+				// Detener patas
+				cebraPataDelDer = 0.0f;
+				cebraPataDelIzq = 0.0f;
+				cebraPataTrasDer = 0.0f;
+				cebraPataTrasIzq = 0.0f;
+			}
+			// FASE 5: Caminar hacia arriba (Z: -10.0 → -3.5) - 7 segundos
+			else if (t < 24.0f)
+			{
+				float t5 = t - 17.0f;
+				cebraPos.x = -10.5f;
+				float totalDist = 6.5f;
+				cebraPos.z = -10.0f + (t5 * (totalDist / 7.0f)); // Avanza hacia +Z
+
+				// Ciclo de caminata
+				float paso = sin(t5 * 5.5f);
+				cebraPataDelDer = paso * 4.0f;
+				cebraPataTrasDer = paso * 4.0f;
+				cebraPataDelIzq = -paso * 4.0f;
+				cebraPataTrasIzq = -paso * 4.0f;
+
+				rotCebra = 0.0f;
+			}
+			// FASE 6: Giro final hacia la derecha (1 segundo)
+			else if (t < 25.0f)
+			{
+				float t6 = t - 24.0f;
+				cebraPos.x = -10.5f;
+				cebraPos.z = -3.5f;
+
+				// rotación de 0° a 90°
+				rotCebra = t6 * 90.0f;
+
+				// Detener patas
+				cebraPataDelDer = 0.0f;
+				cebraPataDelIzq = 0.0f;
+				cebraPataTrasDer = 0.0f;
+				cebraPataTrasIzq = 0.0f;
+			}
+			// FASE 7: Caminar de regreso a la posición inicial (X: -10.5 → -2.8) - 8 segundos
+			else if (t < 33.0f)
+			{
+				float t7 = t - 25.0f;
+				float totalDist = 7.7f; // Distancia en X
+				cebraPos.x = -10.5f + (t7 * (totalDist / 8.0f)); // Avanza hacia +X
+				cebraPos.z = -3.5f;
+
+				// Ciclo de caminata
+				float paso = sin(t7 * 5.5f);
+				cebraPataDelDer = paso * 4.0f;
+				cebraPataTrasDer = paso * 4.0f;
+				cebraPataDelIzq = -paso * .0f;
+				cebraPataTrasIzq = -paso * 4.0f;
+
+				rotCebra = 90.0f; // Mirando hacia la derecha (+X)
+			}
+			// FASE 8: Giro final
+			else if (t < 34.0f)
+			{
+				float t8 = t - 33.0f;
+				cebraPos.x = -2.8f;
+				cebraPos.z = -3.5f;
+
+				// rotación
+				rotCebra = 90.0f + (t8 * 90.0f);
+
+				// Detener patas
+				cebraPataDelDer = 0.0f;
+				cebraPataDelIzq = 0.0f;
+				cebraPataTrasDer = 0.0f;
+				cebraPataTrasIzq = 0.0f;
+			}
+			// FASE 9: Quieta en posición inicial
+			else
+			{
+				cebraPos.x = -2.8f;
+				cebraPos.z = -3.5f;
+				cebraPataDelDer = 0.0f;
+				cebraPataDelIzq = 0.0f;
+				cebraPataTrasDer = 0.0f;
+				cebraPataTrasIzq = 0.0f;
+				rotCebra = 180.0f; // Mirando hacia abajo
+			}
+		}
+
 		// ---------------------------------------------------------------------------------
 	// 							DIBUJO DE MODELOS DESIERTO (-x,z)
 	// ---------------------------------------------------------------------------------
@@ -2830,6 +3044,21 @@ void DoMovement()
 	else
 	{
 		teclaJ_presionada = false;
+	}
+
+	// --- ¡NUEVO! CEBRA (Tecla L) ---
+	if (keys[GLFW_KEY_L])
+	{
+		if (!teclaL_presionada)
+		{
+			animarCebra = !animarCebra;
+			startTimeCebra = glfwGetTime();
+			teclaL_presionada = true;
+		}
+	}
+	else
+	{
+		teclaL_presionada = false;
 	}
 
 	//CAMELLO
