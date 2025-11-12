@@ -1,3 +1,65 @@
+/*
+================================================================================
+	PROYECTO FINAL - COMPUTACIÓN GRÁFICA
+	Zoológico Virtual Interactivo en OpenGL
+================================================================================
+
+DESCRIPCIÓN:
+	Simulación 3D de un zoológico virtual con múltiples hábitats (Acuario, Selva,
+	Sabana, Desierto y Aviario). Incluye animaciones de animales, sistema de
+	iluminación dinámico, cámara intercambiable y renderizado con texturas.
+
+CARACTERÍSTICAS PRINCIPALES:
+	- Renderizado 3D con OpenGL 3.3
+	- Sistema de cámara en primera y tercera persona
+	- Animaciones jerárquicas para 13 especies de animales
+	- Sistema de iluminación con 7 luces puntuales + luz direccional
+	- Skybox para ambiente inmersivo
+	- Texturas repetibles para pisos diferenciados por hábitat
+	- Audio de fondo con miniaudio
+	- Modelos 3D cargados desde archivos .obj
+
+CONTROLES:
+	- W/A/S/D o Flechas: Movimiento de cámara
+	- Mouse: Rotación de cámara
+	- TAB: Cambiar entre primera/tercera persona
+	- ESPACIO: Activar luz central animada
+
+	Animaciones de animales:
+	- V: Elefante (Sabana)
+	- J: Jirafa (Sabana)
+	- L: Cebra (Sabana)
+	- C: Camello (Desierto)
+	- Z: Cóndor (Desierto)
+	- X: Tortuga (Desierto)
+	- B: Capibara (Selva)
+	- M: Mono (Selva)
+	- O: Guacamaya (Selva)
+	- N: Nutria (Acuario)
+	- T: Tortuga Acuario
+
+LIBRERÍAS UTILIZADAS:
+	- GLEW: Manejo de extensiones OpenGL
+	- GLFW: Gestión de ventanas y eventos
+	- GLM: Matemáticas para gráficos 3D
+	- SOIL2: Carga de texturas
+	- STB_IMAGE: Procesamiento de imágenes
+	- miniaudio: Reproducción de audio
+
+ESTRUCTURA DEL CÓDIGO:
+	1. Declaración de funciones y variables globales
+	2. Función main() - Inicialización y bucle de renderizado
+	3. Funciones auxiliares (ConfigurarVAO, ConfigurarTexturaRepetible, DibujarPiso)
+	4. Funciones de callbacks (DoMovement, KeyCallback, MouseCallback)
+
+AUTORES: -Oscar Cruz Soria
+		 -Ana Isabel Diaz Bautista
+		 -Carlos Mario Hernandez Gutierrez
+
+FECHA: 12 Noviembre 2025
+================================================================================
+*/
+
 #include <iostream>
 #include <cmath>
 #include <GL/glew.h>
@@ -19,12 +81,26 @@
 #include "miniaudio.h"
 
 
+/*
+================================================================================
+	FUNCIONES PROTOTIPO - CALLBACKS Y UTILIDADES
+================================================================================
+
+CALLBACKS DE GLFW:
+	- KeyCallback: Maneja eventos de teclado (presionar/soltar teclas)
+	- MouseCallback: Procesa movimiento del mouse para rotación de cámara
+	- DoMovement: Ejecuta movimientos de cámara y activa/desactiva animaciones
+
+FUNCIONES AUXILIARES DE RENDERIZADO:
+	- ConfigurarVAO: Configura Vertex Array Objects con sus VBOs para geometría
+	- ConfigurarTexturaRepetible: Establece parámetros de wrapping para texturas
+	- DibujarPiso: Renderiza superficies con texturas aplicadas y transformaciones
+*/
+
 // Funciones prototipo para callbacks
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void MouseCallback(GLFWwindow* window, double xPos, double yPos);
 void DoMovement();
-
-
 // ====================================================
 // 	CONFIGURACIÓN INICIAL Y VARIABLES GLOBALES
 // ====================================================
@@ -32,6 +108,40 @@ void DoMovement();
 void ConfigurarVAO(GLuint& VAO, GLuint& VBO, float* vertices, size_t size);
 void ConfigurarTexturaRepetible(GLuint textureID);
 void DibujarPiso(GLuint textureID, glm::vec3 posicion, glm::vec3 escala, GLuint VAO_Cubo, GLint modelLoc);
+
+
+/*
+================================================================================
+	CONFIGURACIÓN INICIAL Y VARIABLES GLOBALES
+================================================================================
+
+PROPIEDADES DE VENTANA:
+	- WIDTH/HEIGHT: Dimensiones de la ventana (1280x720)
+	- SCREEN_WIDTH/SCREEN_HEIGHT: Dimensiones del framebuffer
+
+SISTEMA DE CÁMARA:
+	- camera: Objeto Camera inicializado en posición (0, 1, 21)
+	- teclaTAB_presionada: Control de alternancia entre cámaras
+	- lastX/lastY: Última posición del mouse para cálculo de delta
+	- keys[1024]: Array de estados de teclas
+	- firstMouse: Flag para inicialización de mouse
+
+SISTEMA DE ILUMINACIÓN:
+	- lightPos/lightPos2: Posiciones de luces auxiliares (legacy)
+	- pointLightPositions[7]: Array de posiciones para luces puntuales:
+		[0] Centro (luz animada)
+		[1] Entrada (sobre letrero)
+		[2] Desierto (Oasis)
+		[3] Sabana
+		[4] Acuario (Iglú)
+		[5] Aviario (Centro)
+		[6] Selva
+
+CONTROL DE TIEMPO:
+	- deltaTime: Tiempo transcurrido entre frames (para movimiento suave)
+	- lastFrame: Timestamp del frame anterior
+*/
+
 
 // Propiedades de la ventana
 const GLuint WIDTH = 1280, HEIGHT = 720;
@@ -62,6 +172,33 @@ glm::vec3 pointLightPositions[] = {
 };
 
 
+/*
+================================================================================
+	SISTEMA DE ANIMACIÓN DE ANIMALES
+================================================================================
+
+ESTRUCTURA DE DATOS POR ANIMAL:
+	Cada animal tiene asociado:
+	- Variables de rotación para partes del cuerpo (rot*)
+	- Posición actual (XYZ) y rotación general
+	- Escala de renderizado
+	- Flags de control de animación (animar*)
+	- Variables de timing (startTime*)
+	- Flags de control de teclas (tecla*_presionada)
+
+TÉCNICA DE ANIMACIÓN:
+	- Animación jerárquica: El cuerpo es el padre, las extremidades son hijos
+	- Interpolación temporal: Uso de glfwGetTime() para ciclos suaves
+	- Transformaciones por pivote: Traslación al pivote -> Rotación -> Vuelta
+	- Estados de animación: Cada animal tiene fases (caminar, girar, detenerse, etc.)
+
+CUADRANTES DEL ZOOLÓGICO:
+	- ACUARIO (X, -Z): Pingüino, Tortuga, Nutria
+	- SELVA (X, Z): Capibara, Mono, Guacamaya
+	- SABANA (-X, -Z): Elefante, Jirafa, Cebra
+	- DESIERTO (-X, Z): Camello, Tortuga, Cóndor
+	- AVIARIO (Centro): Ave enjaulada
+*/
 
 // =================================================================================
 // 						ANIMACIÓN Y POSICIONES BASE DE ANIMALES
@@ -254,6 +391,28 @@ float rotCabeza = 0.0f;
 glm::vec3 avePos = glm::vec3(0.0f, 1.0f, 0.0f);
 
 
+	/*
+	================================================================================
+		DATOS DE GEOMETRÍA - VÉRTICES DE PRIMITIVAS
+	================================================================================
+
+	FORMATO DE VÉRTICES:
+		Cada vértice contiene 8 floats:
+		- Posiciones (x, y, z): Coordenadas en espacio objeto
+		- Normales (nx, ny, nz): Vector perpendicular para iluminación
+		- Coordenadas UV (u, v): Mapeo de texturas
+
+	ARRAY vertices[]:
+		Define un cubo unitario centrado en origen
+		Usado para: Pisos, paredes base y geometría simple
+		Coordenadas UV ajustadas para repetición (0-10 en cara inferior/superior)
+
+	ARRAY verticesPared[]:
+		Cubo con coordenadas UV optimizadas para texturas de muro
+		Mayor repetición horizontal (0-15) que vertical (0-5)
+		Mantiene proporción realista de ladrillos/bloques
+	*/
+
 // Vértices para el piso
 float vertices[] = {
 	// Posiciones         // Normales          // Coordenadas de Textura (U, V)
@@ -360,6 +519,25 @@ GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
 
 
+	/*
+	================================================================================
+		FUNCIÓN MAIN - PUNTO DE ENTRADA DEL PROGRAMA
+	================================================================================
+
+	FASE 1: INICIALIZACIÓN DE GLFW Y CONTEXTO OPENGL
+		- Configuración de versión OpenGL 3.3
+		- Creación de ventana con título del proyecto
+		- Establecimiento de callbacks para input
+		- Desactivación del cursor
+
+	FASE 2: INICIALIZACIÓN DE GLEW
+		- Carga de funciones OpenGL modernas
+		- Validación de extensiones disponibles
+
+	FASE 3: CONFIGURACIÓN DE VIEWPORT
+		- Definición del área de renderizado
+	*/
+
 int main()
 {
 	// =================================================================================
@@ -374,7 +552,7 @@ int main()
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
 	
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Proyecto Final Computacion Gragifica-Zoologico", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Proyecto Final Computacion Grafica-Zoologico", nullptr, nullptr);
 
 	if (nullptr == window)
 	{
@@ -403,6 +581,16 @@ int main()
 	// Define the viewport dimensions
 	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
+		/*
+	================================================================================
+		CARGA DE SHADERS Y MODELOS 3D
+	================================================================================
+
+	SHADERS:
+		- lightingShader: Shader principal con modelo de iluminación Phong
+		- lampShader: Shader simplificado para objetos emisores de luz
+		- skyboxShader: Shader especializado para cubemap ambiental
+	*/
 
 	// Cargar shaders
 	Shader lightingShader("Shader/lighting.vs", "Shader/lighting.frag");
@@ -451,6 +639,27 @@ float skyboxVertices[] = {
 	 1.0f, -1.0f,  1.0f
 };
  
+
+/* MODELOS 3D:
+	Los modelos se cargan desde archivos .obj usando la clase Model
+	Organizados por secciones:
+
+	PERSONAJE: Alex (león) - Modelo visible en tercera persona
+
+	ENTRADA: Letrero, Taquilla, Adornos (Naruto, Hello Kitty, CDMX, Carrusel)
+
+	ACUARIO: Escenario, Iglú, Pingüino (5 partes), Tortuga (6 partes), Nutria (7 partes)
+
+	SELVA: Árbol, Decoración (sandía, troncos, pelota, plátanos, gato, rama),
+		   Plantas, Lotos, Capibara (7 partes), Mono (6 partes), Guacamaya (3 partes)
+
+	DESIERTO: Oasis, Huesos, Tronco, Cactus, Camello (6 partes), Tortuga (3 partes), Cóndor (4 partes)
+
+	SABANA: Árboles, Rocas, Plantas, Elefante (6 partes), Jirafa (7 partes), Cebra (5 partes)
+
+	AVIARIO: Estructura (madera + vidrio), Ave central (6 partes)
+
+*/
 
 	// =================================================================================
 	// 						CARGA DE MODELO - Personaje camara
@@ -510,7 +719,6 @@ float skyboxVertices[] = {
 	Model EscenarioAcuario((char*)"Models/Acuario/escenarioacuario.obj");
 	// IGLU
 	Model IgluModel((char*)"Models/Acuario/IGLU.obj");
-
 
 	// --- Pinguino ---
 
@@ -763,6 +971,32 @@ float skyboxVertices[] = {
 	std::cout << "Modelos cargados sabana!" << std::endl;
 
 
+	/*
+	================================================================================
+		SISTEMA DE TEXTURAS
+	================================================================================
+
+	CARGA Y CONFIGURACIÓN:
+    - TextureFromFile(): Carga imágenes desde disco
+    - ConfigurarTexturaRepetible(): Establece parámetros de wrapping/filtering
+
+	TEXTURAS CARGADAS:
+    - pisoTextureID: Ladrillo (piso general)
+    - pisoEntradaID: Pasto (zona de acceso)
+    - paredTextureID: Muro (cercado perimetral)
+    - pisoAcuarioTextureID: Textura acuática general
+    - pisoPiedraTextureID: Rocas (zona terrestre acuario)
+    - pisoAguaTextureID: Agua (zona sumergible)
+    - pisoSelvaTextureID: Vegetación densa
+    - pisoSabanaTextureID: Tierra seca con pasto
+    - pisoArenaTextureID: Arena desértica
+
+	PARÁMETROS DE REPETICIÓN:
+    - GL_REPEAT: Permite tiling para áreas grandes
+    - GL_LINEAR_MIPMAP_LINEAR: Filtrado trilineal para calidad
+    - Coordenadas UV escaladas (0-10) para múltiples repeticiones
+*/
+
 	// =================================================================================
 	// 						Carga de Texturas para los pisos
 	// =================================================================================
@@ -808,10 +1042,33 @@ float skyboxVertices[] = {
 	GLuint pisoArenaTextureID = TextureFromFile("images/sand.jpg", ".");
 	ConfigurarTexturaRepetible(pisoArenaTextureID);
 
-
-
 	glm::mat4 projection = glm::perspective(camera.GetZoom(), (GLfloat)SCREEN_WIDTH / (GLfloat)SCREEN_HEIGHT, 0.1f, 100.0f);
 
+
+		/*
+	================================================================================
+		CONFIGURACIÓN DE VERTEX ARRAY OBJECTS (VAOs)
+	================================================================================
+
+	VAO_Cubo: Usado para pisos y geometría básica
+	VAO_Pared: Optimizado para paredes con UV ajustadas
+	VAO_Entrada: Duplicado de cubo para zona de entrada
+	skyboxVAO: Cubo invertido para renderizado de skybox
+
+	PROCESO:
+		1. Generación de VAO y VBO
+		2. Carga de datos de vértices en GPU
+		3. Configuración de atributos:
+		   - Location 0: Posición (vec3)
+		   - Location 1: Normal (vec3)
+		   - Location 2: UV (vec2)
+		4. Desvinculación para evitar modificaciones accidentales
+
+	SKYBOX:
+		- Vertices simplificados (solo posiciones)
+		- Renderizado con depth testing especial (GL_LEQUAL)
+		- Mapeo a cubemap texture para ambiente 360°
+	*/
 
 	// =================================================================================
 	// 		CONFIGURACIÓN DE VÉRTICES PARA PISO GENERAL
@@ -851,6 +1108,23 @@ float skyboxVertices[] = {
 	faces.push_back("images/skybox/front.jpg");
 	GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
 
+	/*
+	================================================================================
+		SISTEMA DE AUDIO - miniaudio
+	================================================================================
+
+	CONFIGURACIÓN:
+		- ma_engine: Motor de audio de alto nivel
+		- ma_engine_init(): Inicializa con configuración por defecto
+		- ma_engine_play_sound(): Reproduce archivo mp3 en loop
+
+	FLUJO:
+		1. Creación del engine
+		2. Validación de inicialización exitosa
+		3. Reproducción de "musica.mp3" de fondo
+		4. El engine maneja automáticamente el streaming y mixing
+	*/
+
 	// Inicializar miniaudio para audio de fondo
 	ma_engine engine;
 	ma_result result = ma_engine_init(NULL, &engine);
@@ -858,12 +1132,37 @@ float skyboxVertices[] = {
 		std::cout << "Error al inicializar audio" << std::endl;
 	}
 
-	// Reproducir música en loop
-	ma_engine_play_sound(&engine, "musica.mp3", NULL);
+	// CAMBIAR A ESTO para que haga loop:
+	ma_sound sound;
+	ma_sound_init_from_file(&engine, "musica.mp3", 0, NULL, NULL, &sound);
+	ma_sound_set_looping(&sound, MA_TRUE); 
+	ma_sound_start(&sound);
 
 	// =================================================================================
 	// 								CICLO DE RENDERIZADO
 	// =================================================================================
+
+	/*
+	================================================================================
+		BUCLE PRINCIPAL DE RENDERIZADO
+	================================================================================
+
+	ESTRUCTURA DEL FRAME:
+		1. Cálculo de deltaTime (para movimiento independiente del framerate)
+		2. Procesamiento de eventos (glfwPollEvents)
+		3. Actualización de estado (DoMovement)
+		4. Limpieza de buffers (color + profundidad)
+		5. Activación de depth testing
+		6. Configuración de shader y uniforms
+		7. Renderizado de geometría
+		8. Renderizado de skybox
+		9. Swap de buffers (presentación)
+
+	GESTIÓN DE TIEMPO:
+		- deltaTime = currentFrame - lastFrame
+		- Permite velocidad constante independiente de FPS
+		- Usado en movimiento de cámara y animaciones
+	*/
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -889,6 +1188,49 @@ float skyboxVertices[] = {
 		GLint viewPosLoc = glGetUniformLocation(lightingShader.Program, "viewPos");
 		glUniform3f(viewPosLoc, camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
 
+		/*
+		================================================================================
+			SISTEMA DE ILUMINACIÓN DINÁMICA
+		================================================================================
+
+		LUZ DIRECCIONAL:
+			- Dirección: (-0.4, -1.0, -0.2) 
+			- Ambiente: Luz tenue base (0.15, 0.13, 0.10)
+			- Difusa: Luz principal cálida (0.9, 0.85, 0.75)
+			- Especular: Brillos intensos (1.0, 0.95, 0.85)
+
+		LUCES PUNTUALES [0-6]:
+			Configuradas individualmente por zona:
+
+			[0] CENTRO (Animada):
+				- Color oscilante con seno del tiempo
+				- Efecto disco/fiesta
+				- Activación con tecla ESPACIO
+
+			[1] ENTRADA:
+				- Luz cálida blanca (0.8, 0.9, 1.0)
+				- Ilumina letrero y acceso
+
+			[2] DESIERTO:
+				- Tonos cálidos para simular calor
+				- Atenuación moderada
+
+			[3] SABANA:
+				- Luz dorada (0.35, 0.33, 0.28)
+				- Mayor atenuación (linear 0.14)
+
+			[4] ACUARIO:
+				- Tonos azulados (0.2, 0.3, 0.4)
+				- Ambiente submarino
+
+			[5] AVIARIO:
+				- Verde muy suave (0.25, 0.3, 0.25)
+				- Alta atenuación cuadrática (0.20)
+
+			[6] SELVA:
+				- Verde cálido difuso (0.6, 0.5, 0.4)
+				- Balance entre vegetación y visibilidad
+		*/
 
 		// ===================================================================
 		// 					CONFIGURACIÓN DE LUCES
@@ -1013,8 +1355,41 @@ float skyboxVertices[] = {
 		lightingShader.Use();
 
 
-		// CARGA DE TEXTURAS
+	/*
+	================================================================================
+		RENDERIZADO DE ESCENARIOS Y ESTRUCTURAS
+	================================================================================
 
+	FUNCIÓN DibujarPiso():
+		Parámetros:
+		- textureID: ID de textura a aplicar
+		- posicion: Centro del objeto en espacio mundo
+		- escala: Tamaño final (x, y, z)
+		- VAO_Cubo: Geometría a renderizar
+		- modelLoc: Location del uniform "model" en shader
+
+	PISOS RENDERIZADOS:
+		1. Piso General (Ladrillo): Base 25x25 unidades
+		2. Piso Entrada (Pasto): 25x10 unidades, desplazado en Z
+		3. Piso Acuario (dividido):
+		   - Mitad piedra (zona terrestre)
+		   - Mitad agua (zona sumergible)
+		4. Piso Selva: Cuadrante +X, +Z
+		5. Piso Sabana: Cuadrante -X, -Z
+		6. Piso Desierto: Cuadrante -X, +Z
+
+	PAREDES:
+		- Altura: 3.0 unidades (alturaPared)
+		- Espesor: 0.2 unidades
+		- Disposición: Perimetral + apertura de entrada
+		- Texturas con UV escaladas para realismo
+
+	PERSONAJE EN TERCERA PERSONA:
+		- Solo visible cuando camera.GetCameraType() == THIRD_PERSON
+		- Rotación calculada desde cameraFront (atan2)
+		- Posición sincronizada con cámara (offset Y = -1.4)
+		- Escala reducida: 0.02x
+	*/
 
 		// ---------------------------------------------------------------------------------
 		// 							DIBUJO DE ESCENARIOS
@@ -1495,6 +1870,38 @@ float skyboxVertices[] = {
 		model = glm::translate(model, -capibaraPivotNaranja);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		Capibara_Naranja.Draw(lightingShader);
+
+		/*
+		================================================================================
+			SISTEMA DE ANIMACIÓN JERÁRQUICA
+		================================================================================
+
+		TÉCNICA DE TRANSFORMACIÓN:
+			1. model = matriz identidad
+			2. Aplicar transformación global (posición, rotación, escala)
+			3. Guardar en modelTemp para partes hijas
+			4. Para cada parte del cuerpo:
+			   a. Recuperar modelTemp (hereda transformación del padre)
+			   b. Trasladar al pivote local
+			   c. Aplicar rotación específica
+			   d. Trasladar de vuelta desde pivote
+			   e. Enviar matriz al shader
+			   f. Renderizar parte
+
+		PIVOTES:
+			Puntos de articulación en espacio local del modelo
+			Ejemplo Pingüino:
+			- Aletas: (±0.18, 0.5, 0.0) - Hombros
+			- Patas: (±0.06, -0.4, 0.02) - Caderas
+
+		INTERPOLACIÓN TEMPORAL:
+			- glm::mix(startPos, endPos, t_interp): Interpolación lineal
+			- sin(t * frequency) * amplitude: Movimientos oscilantes
+
+		FASES DE ANIMACIÓN:
+			Típicamente: Caminar -> Girar -> Caminar vuelta -> Girar -> Quieto
+			Timing controlado con condicionales if-else en cascada
+		*/
 
 		// CAPIBARA - ANIMACIÓN
 		if (animarCapibara)
@@ -2914,6 +3321,32 @@ float skyboxVertices[] = {
 
 		lightingShader.Use(); // shader de iluminación 
 
+			/*
+	================================================================================
+		RENDERIZADO DEL SKYBOX
+	================================================================================
+
+	TÉCNICA:
+		1. Cambiar función de profundidad a GL_LEQUAL
+		   (permite que el skybox se dibuje "en el infinito")
+		2. Activar skyboxShader
+		3. Eliminar componente de traslación de la matriz view
+		   (el skybox siempre está centrado en la cámara)
+		4. Renderizar cubo unitario con cubemap texture
+		5. Restaurar función de profundidad a GL_LESS
+
+	CUBEMAP:
+		6 texturas cargadas:
+		- right.jpg (cara +X)
+		- left.jpg (cara -X)
+		- top.jpg (cara +Y)
+		- bottom.jpg (cara -Y)
+		- back.jpg (cara +Z)
+		- front.jpg (cara -Z)
+
+		Crear ilusión de ambiente infinito y mejorar inmersión
+	*/
+
 		// ========================================================================
 		//								DIBUJAR SKYBOX
 		// ========================================================================
@@ -2942,6 +3375,28 @@ float skyboxVertices[] = {
 	return 0;
 }
 
+	/*
+	================================================================================
+		FUNCIÓN: ConfigurarVAO
+	================================================================================
+	PROPÓSITO:
+		Configura un Vertex Array Object con sus datos de geometría
+
+	PARÁMETROS:
+		- VAO: Referencia al ID del VAO (salida)
+		- VBO: Referencia al ID del VBO (salida)
+		- vertices: Puntero al array de datos de vértices
+		- size: Tamaño en bytes del array
+
+	PROCESO:
+		1. Genera y vincula VAO
+		2. Genera y llena VBO con datos
+		3. Configura punteros de atributos:
+		   - Posición (3 floats, offset 0)
+		   - Normal (3 floats, offset 3*sizeof(float))
+		   - UV (2 floats, offset 6*sizeof(float))
+		4. Desvincula VAO
+	*/
 
 // --- Función para configurar VAO/VBO genérico ---
 void ConfigurarVAO(GLuint& VAO, GLuint& VBO, float* vertices, size_t size)
@@ -2968,7 +3423,24 @@ void ConfigurarVAO(GLuint& VAO, GLuint& VBO, float* vertices, size_t size)
 	glBindVertexArray(0);
 }
 
+/*
+================================================================================
+	FUNCIÓN: ConfigurarTexturaRepetible
+================================================================================
+PROPÓSITO:
+	Establece parámetros de wrapping y filtering para texturas
 
+PARÁMETROS:
+	- textureID: ID de la textura ya cargada
+
+CONFIGURACIÓN:
+	- WRAP_S/WRAP_T: GL_REPEAT (permite tiling)
+	- MIN_FILTER: GL_LINEAR_MIPMAP_LINEAR (trilinear)
+	- MAG_FILTER: GL_LINEAR (bilinear)
+
+RESULTADO:
+	Textura optimizada para superficies grandes sin distorsión
+*/
 
 // --- Función para configurar los parametros del piso de textura ---
 void ConfigurarTexturaRepetible(GLuint textureID)
@@ -2982,6 +3454,32 @@ void ConfigurarTexturaRepetible(GLuint textureID)
 }
 
 
+/*
+================================================================================
+	FUNCIÓN: DibujarPiso
+================================================================================
+PROPÓSITO:
+	Renderiza una superficie con textura aplicada
+
+PARÁMETROS:
+	- textureID: Textura a aplicar
+	- posicion: Posición central del objeto
+	- escala: Dimensiones (x, y, z)
+	- VAO_Cubo: Geometría a usar
+	- modelLoc: Location del uniform "model"
+
+PROCESO:
+	1. Activa y vincula textura en units 0 y 1
+	2. Vincula VAO
+	3. Habilita atributos de vértice
+	4. Construye matriz model (traslación + escala)
+	5. Envía matriz al shader
+	6. Dibuja 36 vértices (12 triángulos = 6 caras)
+	7. Desvincula VAO
+
+USO:
+	Llamar para cada superficie (pisos, paredes, etc.)
+*/
 // --- Función para dibujar pisos con textura ---
 void DibujarPiso(GLuint textureID, glm::vec3 posicion, glm::vec3 escala, GLuint VAO_Cubo, GLint modelLoc)
 {
@@ -3011,7 +3509,41 @@ void DibujarPiso(GLuint textureID, glm::vec3 posicion, glm::vec3 escala, GLuint 
 	glBindVertexArray(0);
 }
 
-// Moves
+	/*
+	================================================================================
+		FUNCIÓN: DoMovement
+	================================================================================
+	PROPÓSITO:
+		Procesa el estado del teclado y ejecuta acciones correspondientes
+
+	SECCIONES:
+
+	1. CONTROLES DE CÁMARA:
+	   - W/Arriba: Avanzar (FORWARD)
+	   - S/Abajo: Retroceder (BACKWARD)
+	   - A/Izquierda: Lateral izquierda (LEFT)
+	   - D/Derecha: Lateral derecha (RIGHT)
+	   - Movimiento multiplicado por deltaTime para suavidad
+
+	2. CAMBIO DE VISTA:
+	   - TAB: Alterna entre FIRST_PERSON y THIRD_PERSON
+	   - Flag teclaTAB_presionada evita múltiples toggles
+	   - Imprime estado actual en consola
+
+	3. ACTIVACIÓN DE ANIMACIONES:
+	   Cada tecla tiene:
+	   - Detección de flanco (presionar una vez)
+	   - Toggle del flag animarXXX
+	   - Captura de timestamp con glfwGetTime()
+	   - Flag teclaXXX_presionada para debouncing
+
+	   Mapeo de teclas:
+	   SABANA: V (Elefante), J (Jirafa), L (Cebra)
+	   DESIERTO: C (Camello), Z (Cóndor), X (Tortuga)
+	   SELVA: B (Capibara), M (Mono), O (Guacamaya)
+	   ACUARIO: N (Nutria), T (Tortuga)
+
+	*/
 void DoMovement()
 {
 
@@ -3158,6 +3690,31 @@ void DoMovement()
 
 }
 
+	/*
+	================================================================================
+		FUNCIÓN: KeyCallback
+	================================================================================
+	PROPÓSITO:
+		Callback de GLFW para eventos discretos de teclado
+
+	PARÁMETROS:
+		- window: Ventana que generó el evento
+		- key: Código de la tecla
+		- scancode: Código dependiente del sistema
+		- action: GLFW_PRESS, GLFW_RELEASE o GLFW_REPEAT
+		- mode: Modificadores (Shift, Ctrl, Alt)
+
+	FUNCIONALIDAD:
+		- ESC: Cierra la ventana
+		- Actualiza array keys[] con estado de teclas (0-1023)
+		- ESPACIO: Toggle de luz animada central
+		  * Activa: Color amarillo oscilante
+		  * Desactiva: Sin color (negro)
+
+	NOTA: Complementa DoMovement() que procesa estado continuo
+	*/
+
+
 // Is called whenever a key is pressed/released via GLFW
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
@@ -3192,6 +3749,27 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
 	}
 }
 
+/*
+================================================================================
+	FUNCIÓN: MouseCallback
+================================================================================
+PROPÓSITO:
+	Procesa movimiento del mouse para rotación de cámara
+
+PARÁMETROS:
+	- window: Ventana que generó el evento
+	- xPos: Posición X del cursor
+	- yPos: Posición Y del cursor
+
+PROCESO:
+	1. Inicialización en primera llamada (evita salto inicial)
+	2. Cálculo de offset: diferencia con posición anterior
+	3. Actualización de lastX/lastY
+	4. Envío de deltas a camera.ProcessMouseMovement()
+
+RESULTADO:
+	Rotación suave de cámara con sensibilidad ajustable en clase Camera
+*/
 void MouseCallback(GLFWwindow* window, double xPos, double yPos)
 {
 	if (firstMouse)
