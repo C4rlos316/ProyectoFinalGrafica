@@ -15,6 +15,9 @@
 //Skybox
 #include "Texture.h"
 
+#define MINIAUDIO_IMPLEMENTATION
+#include "miniaudio.h"
+
 
 // Funciones prototipo para callbacks
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode);
@@ -31,7 +34,7 @@ void ConfigurarTexturaRepetible(GLuint textureID);
 void DibujarPiso(GLuint textureID, glm::vec3 posicion, glm::vec3 escala, GLuint VAO_Cubo, GLint modelLoc);
 
 // Propiedades de la ventana
-const GLuint WIDTH = 1024, HEIGHT = 720;
+const GLuint WIDTH = 1280, HEIGHT = 720;
 int SCREEN_WIDTH, SCREEN_HEIGHT;
 
 // Configuración de la cámara
@@ -371,7 +374,7 @@ int main()
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
 	
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Proyecto Final", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Proyecto Final Computacion Gragifica-Zoologico", nullptr, nullptr);
 
 	if (nullptr == window)
 	{
@@ -847,6 +850,16 @@ float skyboxVertices[] = {
 	faces.push_back("images/skybox/back.jpg");
 	faces.push_back("images/skybox/front.jpg");
 	GLuint cubeMapTexture = TextureLoading::LoadCubemap(faces);
+
+	// Inicializar miniaudio para audio de fondo
+	ma_engine engine;
+	ma_result result = ma_engine_init(NULL, &engine);
+	if (result != MA_SUCCESS) {
+		std::cout << "Error al inicializar audio" << std::endl;
+	}
+
+	// Reproducir música en loop
+	ma_engine_play_sound(&engine, "musica.mp3", NULL);
 
 	// =================================================================================
 	// 								CICLO DE RENDERIZADO
