@@ -1,0 +1,22 @@
+# Blender 4.5.2 LTS MTL File: 'None'
+# www.blender.org
+
+newmtl C__Users_JK_Desktop_NARUTO_ULTI
+Ns 200.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 2
+map_Kd -o 0 -1 0 ntxr001.png
+map_d -o 0 -1 0 ntxr001.png
+
+newmtl C__Users_JK_Desktop_NARUTO_ULTI0
+Ns 200.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 2
+map_Kd -o 0 -1 0 ntxr002.png
+map_d -o 0 -1 0 ntxr002.png
