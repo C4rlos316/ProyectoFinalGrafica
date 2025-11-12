@@ -708,7 +708,34 @@ int main()
 	Model Jirafa_PataTrasDer((char*)"Models/jirafa/pataTrasDerJirafa.obj");
 	Model Jirafa_PataTrasIzq((char*)"Models/jirafa/pataTrasIzqJirafa.obj");
 
-	//
+	// =================================================================================
+    // 						CARGA DE MODELOS - ENTRADA
+	// =================================================================================
+
+	Model Taquilla((char*)"Models/taquilla/taquilla.obj");
+	glm::vec3 taquillaPos(3.5f, 0.4f, 14.5f);
+	glm::vec3 taquillaScale(3.5f, 3.0f, 3.5f);
+	float taquillaRot = 270.0f;
+
+	Model Kitty((char*)"Models/hellokitty/hellokitty.obj");
+	glm::vec3 kittyPos(-2.5f, 0.4f, 14.5f);
+	glm::vec3 kittyScale(1.5f, 1.5f, 1.5f);
+	float kittyRot = 270.0f;
+
+	Model Monito((char*)"Models/monito/monito.obj");
+	glm::vec3 monitoPos(-5.0f, 0.4f, 14.5f);
+	glm::vec3 monitoScale(1.5f, 1.5f, 1.5f);
+	float monitoRot = 270.0f;
+
+	Model CDMX((char*)"Models/cdmx/cdmx.obj");
+	glm::vec3 cdmxPos(-9.0f, 0.4f, 20.0f);
+	glm::vec3 cdmxScale(5.0f, 5.0f, 4.0f);
+	float cdmxRot = 270.0f;
+
+	Model Carrusel((char*)"Models/carrusel/carrusel.obj");
+	glm::vec3 carruselPos(9.0f, 1.0f, 19.0f);
+	glm::vec3 carruselScale(4.0f, 3.0f, 3.5f);
+	float carruselRot = 0.0f;
 
 	// =================================================================================
 	// 						Carga de Texturas para los pisos
@@ -2578,7 +2605,48 @@ int main()
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		PinguPataDer.Draw(lightingShader);
 
+		// ---------------------------------------------------------------------------------
+// 							DIBUJO DE MODELOS ENTRADA
+// ---------------------------------------------------------------------------------
+// --- TAQUILLA ---
+		model = glm::mat4(1);
+		model = glm::translate(model, taquillaPos);
+		model = glm::scale(model, taquillaScale);
+		model = glm::rotate(model, glm::radians(taquillaRot), glm::vec3(0.0f, 1.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Taquilla.Draw(lightingShader);
 
+		// --- HELLO KITTY ---
+		model = glm::mat4(1);
+		model = glm::translate(model, kittyPos);
+		model = glm::scale(model, kittyScale);
+		model = glm::rotate(model, glm::radians(kittyRot), glm::vec3(0.0f, 1.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Kitty.Draw(lightingShader);
+
+		// --- MONITO ---
+		model = glm::mat4(1);
+		model = glm::translate(model, monitoPos);
+		model = glm::scale(model, monitoScale);
+		model = glm::rotate(model, glm::radians(monitoRot), glm::vec3(0.0f, 1.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Monito.Draw(lightingShader);
+
+		// --- CDMX ---
+		model = glm::mat4(1);
+		model = glm::translate(model, cdmxPos);
+		model = glm::scale(model, cdmxScale);
+		model = glm::rotate(model, glm::radians(cdmxRot), glm::vec3(0.0f, 1.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		CDMX.Draw(lightingShader);
+
+		// --- CARRUSEL ---
+		model = glm::mat4(1);
+		model = glm::translate(model, carruselPos);
+		model = glm::scale(model, carruselScale);
+		model = glm::rotate(model, glm::radians(carruselRot), glm::vec3(0.0f, 1.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Carrusel.Draw(lightingShader);
 
 		lightingShader.Use(); // shader de iluminación 
 
